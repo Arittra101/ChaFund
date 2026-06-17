@@ -12,11 +12,11 @@ import com.example.chafund.feature.history.domain.model.HistoryExpense
 import com.example.chafund.feature.history.domain.model.HistoryMonth
 
 fun DailySummaryProjection.toDomain() = DailySummary(
-    date           = date,
-    dateLabel      = DateTimeFormat.formatDate(date),
-    dayName        = DateTimeFormat.dayName(date),
-    totalSpent     = Money(totalSpentForDay),
-    totalEntries   = Money(totalEntriesForDay),
+    date = date,
+    dateLabel = DateTimeFormat.formatDate(date),
+    dayName = DateTimeFormat.dayName(date),
+    totalSpent = Money(totalSpentForDay),
+    totalEntries = Money(totalEntriesForDay),
     balanceAtPoint = Money(balanceAtPoint),
 )
 

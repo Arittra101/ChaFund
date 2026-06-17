@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.example.chafund.core.data.session.Session
 import com.example.chafund.core.domain.onSuccess
 import com.example.chafund.core.utils.Money
 import com.example.chafund.feature.history.domain.HistoryRepository
@@ -55,10 +56,11 @@ sealed interface DayDetailEvent {
 class DayDetailViewModel(
     savedStateHandle: SavedStateHandle,
     private val repository: HistoryRepository,
+    private val session: Session
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<Route.DayDetail>()
-    private val monthId = route.monthId
+    private val monthId = route.monthId ?: session.currentMonthId.value
     private val date = route.dateEpoch
 
     private val _uiState = MutableStateFlow(DayDetailUiState())

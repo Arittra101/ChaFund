@@ -37,8 +37,8 @@ import com.example.chafund.ui.theme.AppColors
 @Composable
 fun DailyHistoryScreenRoot(
     viewModel: DailyHistoryViewModel,
-    onDayClick: (monthId: Long, dateEpoch: Long) -> Unit,
-    monthId: Long,
+    onDayClick: (monthId: Long?, dateEpoch: Long) -> Unit,
+    monthId: Long? = null,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     DailyHistoryScreen(state = state, monthId = monthId, onDayClick = onDayClick)
@@ -48,8 +48,8 @@ fun DailyHistoryScreenRoot(
 @Composable
 fun DailyHistoryScreen(
     state: DailyHistoryUiState,
-    monthId: Long,
-    onDayClick: (monthId: Long, dateEpoch: Long) -> Unit,
+    monthId: Long? = null,
+    onDayClick: (monthId: Long?, dateEpoch: Long) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -82,7 +82,9 @@ fun DailyHistoryScreen(
             // Sticky summary
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     MetricCard(

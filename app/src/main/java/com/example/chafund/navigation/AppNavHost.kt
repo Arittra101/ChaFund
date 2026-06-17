@@ -61,27 +61,27 @@ fun AppNavHost(navigator: Navigator) {
         NavHost(navController = navController, startDestination = Route.Home) {
             composable<Route.Home> {
                 HomeScreenRoot(
-                    viewModel                = koinViewModel<HomeViewModel>(),
-                    onNavigateToDailyHistory = { navController.navigate(Route.DailyHistory(0L)) },
+                    viewModel = koinViewModel<HomeViewModel>(),
+                    onNavigateToDailyHistory = { navController.navigate(Route.DailyHistory(null)) },
                 )
             }
             composable<Route.DailyHistory> { backStack ->
                 val route = backStack.toRoute<Route.DailyHistory>()
                 DailyHistoryScreenRoot(
-                    viewModel  = koinViewModel<DailyHistoryViewModel>(),
-                    monthId    = route.monthId,
+                    viewModel = koinViewModel<DailyHistoryViewModel>(),
+                    monthId = route.monthId,
                     onDayClick = { monthId, date -> navController.navigate(Route.DayDetail(monthId, date)) },
                 )
             }
             composable<Route.DayDetail> {
                 DayDetailScreenRoot(
                     viewModel = koinViewModel<DayDetailViewModel>(),
-                    onBack    = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable<Route.MonthlyHistory> {
                 MonthlyHistoryScreenRoot(
-                    viewModel    = koinViewModel<MonthlyHistoryViewModel>(),
+                    viewModel = koinViewModel<MonthlyHistoryViewModel>(),
                     onMonthClick = { monthId -> navController.navigate(Route.DailyHistory(monthId)) },
                 )
             }

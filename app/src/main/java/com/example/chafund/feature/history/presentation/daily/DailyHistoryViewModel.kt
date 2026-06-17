@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 data class DailyHistoryUiState(
@@ -33,7 +34,7 @@ class DailyHistoryViewModel(
     private val session: Session,
 ) : ViewModel() {
 
-    private val routeMonthId: Long = savedStateHandle.toRoute<Route.DailyHistory>().monthId
+    private val routeMonthId: Long? = savedStateHandle.toRoute<Route.DailyHistory>().monthId
 
     private val _uiState = MutableStateFlow(DailyHistoryUiState())
     val uiState: StateFlow<DailyHistoryUiState> = _uiState.asStateFlow()
@@ -43,25 +44,23 @@ class DailyHistoryViewModel(
     private fun observe() {
         viewModelScope.launch {
             // If monthId == 0 (from bottom nav), use session current
-            val effectiveIdFlow = if (routeMonthId != 0L)
-                kotlinx.coroutines.flow.flowOf(routeMonthId)
-            else
-                session.currentMonthId
+            val effectiveIdFlow = if (routeMonthId != 0L) flowOf(routeMonthId)
+            else session.currentMonthId
 
             effectiveIdFlow.flatMapLatest { monthId ->
                 combine(
                     repository.observeMonthSummaries(),
-                    repository.observeDailySummaries(monthId),
+                    repository.observeDailySummaries(monthId ?: session.currentMonthId.value),
                     session.currentMonthId,
                 ) { months, days, currentId ->
                     val month = months.find { it.id == monthId }
                     DailyHistoryUiState(
                         monthLabel = month?.label ?: "",
                         isReadOnly = monthId != currentId,
-                        spent      = month?.totalSpent ?: Money.Zero,
-                        balance    = month?.balance ?: Money.Zero,
-                        days       = days,
-                        isLoading  = false,
+                        spent = month?.totalSpent ?: Money.Zero,
+                        balance = month?.balance ?: Money.Zero,
+                        days = days,
+                        isLoading = false,
                     )
                 }
             }.collect { _uiState.value = it }

@@ -28,9 +28,9 @@ class MonthManager(
         scope.launch {
             val today = LocalDate.now()
             val candidate = MonthEntity(
-                year      = today.year,
-                month     = today.monthValue,
-                label     = DateTimeFormat.monthLabel(today.year, today.monthValue),
+                year = today.year,
+                month = today.monthValue,
+                label = DateTimeFormat.monthLabel(today.year, today.monthValue),
                 isCurrent = true,
                 createdAt = System.currentTimeMillis(),
             )

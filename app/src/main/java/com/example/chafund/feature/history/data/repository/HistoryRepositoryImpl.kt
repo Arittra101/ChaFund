@@ -1,6 +1,5 @@
 package com.example.chafund.feature.history.data.repository
 
-import android.database.sqlite.SQLiteException
 import com.example.chafund.core.data.database.dao.EntryDao
 import com.example.chafund.core.data.database.dao.ExpenseDao
 import com.example.chafund.core.data.database.dao.HistoryDao
