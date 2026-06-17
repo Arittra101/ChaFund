@@ -60,7 +60,10 @@ fun AppNavHost(navigator: Navigator) {
     ) { _ ->
         NavHost(navController = navController, startDestination = Route.Home) {
             composable<Route.Home> {
-                HomeScreenRoot(viewModel = koinViewModel<HomeViewModel>())
+                HomeScreenRoot(
+                    viewModel                = koinViewModel<HomeViewModel>(),
+                    onNavigateToDailyHistory = { navController.navigate(Route.DailyHistory(0L)) },
+                )
             }
             composable<Route.DailyHistory> { backStack ->
                 val route = backStack.toRoute<Route.DailyHistory>()

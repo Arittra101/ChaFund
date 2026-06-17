@@ -42,21 +42,31 @@ class HistoryRepositoryImpl(
                 .groupBy { it.categoryId }
                 .map { (catId, expenses) ->
                     ExpenseGrouped(
-                        categoryId   = catId,
+                        categoryId = catId,
                         categoryName = expenses.first().categoryName,
-                        sortOrder    = expenses.first().categorySortOrder,
-                        expenses     = expenses.sortedByDescending { it.time },
+                        sortOrder = expenses.first().categorySortOrder,
+                        expenses = expenses.sortedByDescending { it.time },
                     )
                 }
                 .sortedBy { it.sortOrder }
         }
 
-    override suspend fun updateEntry(id: Long, amountPaisa: Long, ref: String?): Result<Unit, DataError.Local> =
+    override suspend fun updateEntry(
+        id: Long,
+        amountPaisa: Long,
+        ref: String?
+    ): Result<Unit, DataError.Local> =
         withContext(dispatchers.io) {
             runCatching {
                 val entity = entryDao.findById(id)
                     ?: return@withContext Result.Error(DataError.Local.NOT_FOUND)
-                entryDao.update(entity.copy(amountPaisa = amountPaisa, ref = ref, updatedAt = System.currentTimeMillis()))
+                entryDao.update(
+                    entity.copy(
+                        amountPaisa = amountPaisa,
+                        ref = ref,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                )
                 Result.Success(Unit)
             }.getOrElse { Result.Error(DataError.Local.UNKNOWN) }
         }
@@ -69,17 +79,24 @@ class HistoryRepositoryImpl(
             }.getOrElse { Result.Error(DataError.Local.UNKNOWN) }
         }
 
-    override suspend fun updateExpense(id: Long, amountPaisa: Long, categoryId: Long, ref: String?): Result<Unit, DataError.Local> =
+    override suspend fun updateExpense(
+        id: Long,
+        amountPaisa: Long,
+        categoryId: Long,
+        ref: String?
+    ): Result<Unit, DataError.Local> =
         withContext(dispatchers.io) {
             runCatching {
                 val entity = expenseDao.findById(id)
                     ?: return@withContext Result.Error(DataError.Local.NOT_FOUND)
-                expenseDao.update(entity.copy(
-                    amountPaisa    = amountPaisa,
-                    timeCategoryId = categoryId,
-                    ref            = ref,
-                    updatedAt      = System.currentTimeMillis(),
-                ))
+                expenseDao.update(
+                    entity.copy(
+                        amountPaisa = amountPaisa,
+                        timeCategoryId = categoryId,
+                        ref = ref,
+                        updatedAt = System.currentTimeMillis(),
+                    )
+                )
                 Result.Success(Unit)
             }.getOrElse { Result.Error(DataError.Local.UNKNOWN) }
         }

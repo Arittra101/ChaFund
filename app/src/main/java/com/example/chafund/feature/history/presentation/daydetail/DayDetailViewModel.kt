@@ -64,7 +64,9 @@ class DayDetailViewModel(
     private val _uiState = MutableStateFlow(DayDetailUiState())
     val uiState: StateFlow<DayDetailUiState> = _uiState.asStateFlow()
 
-    init { observe() }
+    init {
+        observe()
+    }
 
     private fun observe() {
         viewModelScope.launch {
@@ -72,14 +74,15 @@ class DayDetailViewModel(
                 repository.observeEntriesForDay(monthId, date),
                 repository.observeExpensesForDay(monthId, date),
             ) { entries, groups ->
-                val totalSpent = groups.flatMap { it.expenses }.sumOf { it.amountPaisa }.let { Money(it) }
-                val dateLabel  = com.example.chafund.core.utils.DateTimeFormat.formatDate(date)
-                val dayName    = com.example.chafund.core.utils.DateTimeFormat.dayName(date)
+                val totalSpent =
+                    groups.flatMap { it.expenses }.sumOf { it.amountPaisa }.let { Money(it) }
+                val dateLabel = com.example.chafund.core.utils.DateTimeFormat.formatDate(date)
+                val dayName = com.example.chafund.core.utils.DateTimeFormat.dayName(date)
                 _uiState.value.copy(
-                    dateLabel  = "$dayName, $dateLabel",
-                    dayName    = dayName,
-                    entries    = entries,
-                    groups     = groups,
+                    dateLabel = "$dayName, $dateLabel",
+                    dayName = dayName,
+                    entries = entries,
+                    groups = groups,
                     totalSpent = totalSpent,
                 )
             }.collect { _uiState.value = it }
@@ -88,35 +91,55 @@ class DayDetailViewModel(
 
     fun onEvent(event: DayDetailEvent) {
         when (event) {
-            is DayDetailEvent.EditEntry   -> _uiState.update { it.copy(
-                editingEntry    = event.entry,
-                editingExpense  = null,
-                editAmountInput = Money(event.entry.amountPaisa).paisa.div(100.0).toString(),
-                editRefInput    = event.entry.ref ?: "",
-            )}
-            is DayDetailEvent.EditExpense -> _uiState.update { it.copy(
-                editingExpense  = event.expense,
-                editingEntry    = null,
-                editAmountInput = Money(event.expense.amountPaisa).paisa.div(100.0).toString(),
-                editRefInput    = event.expense.ref ?: "",
-            )}
+            is DayDetailEvent.EditEntry -> _uiState.update {
+                it.copy(
+                    editingEntry = event.entry,
+                    editingExpense = null,
+                    editAmountInput = Money(event.entry.amountPaisa).paisa.div(100.0).toString(),
+                    editRefInput = event.entry.ref ?: "",
+                )
+            }
+
+            is DayDetailEvent.EditExpense -> _uiState.update {
+                it.copy(
+                    editingExpense = event.expense,
+                    editingEntry = null,
+                    editAmountInput = Money(event.expense.amountPaisa).paisa.div(100.0).toString(),
+                    editRefInput = event.expense.ref ?: "",
+                )
+            }
+
             is DayDetailEvent.OnEditAmountChange -> _uiState.update {
                 it.copy(editAmountInput = event.value, editAmountError = null)
             }
+
             is DayDetailEvent.OnEditRefChange -> _uiState.update { it.copy(editRefInput = event.value) }
-            DayDetailEvent.SaveEdit    -> saveEdit()
+            DayDetailEvent.SaveEdit -> saveEdit()
             is DayDetailEvent.RequestDelete -> _uiState.update {
                 it.copy(pendingDeleteId = event.id, pendingDeleteType = event.type)
             }
+
             DayDetailEvent.ConfirmDelete -> confirmDelete()
-            DayDetailEvent.DismissEdit   -> _uiState.update { it.copy(editingEntry = null, editingExpense = null) }
-            DayDetailEvent.DismissDelete -> _uiState.update { it.copy(pendingDeleteId = null, pendingDeleteType = null) }
+            DayDetailEvent.DismissEdit -> _uiState.update {
+                it.copy(
+                    editingEntry = null,
+                    editingExpense = null
+                )
+            }
+
+            DayDetailEvent.DismissDelete -> _uiState.update {
+                it.copy(
+                    pendingDeleteId = null,
+                    pendingDeleteType = null
+                )
+            }
+
             DayDetailEvent.SnackbarDismissed -> _uiState.update { it.copy(snackbarMessage = null) }
         }
     }
 
     private fun saveEdit() {
-        val state  = _uiState.value
+        val state = _uiState.value
         val amount = Money.fromTkString(state.editAmountInput)
         if (amount == null || amount.paisa <= 0) {
             _uiState.update { it.copy(editAmountError = "Enter a valid amount") }
@@ -124,26 +147,63 @@ class DayDetailViewModel(
         }
         viewModelScope.launch {
             if (state.editingEntry != null) {
-                repository.updateEntry(state.editingEntry.id, amount.paisa, state.editRefInput.ifBlank { null })
-                    .onSuccess { _uiState.update { it.copy(editingEntry = null, snackbarMessage = "Entry updated") } }
+                repository.updateEntry(
+                    state.editingEntry.id,
+                    amount.paisa,
+                    state.editRefInput.ifBlank { null })
+                    .onSuccess {
+                        _uiState.update {
+                            it.copy(
+                                editingEntry = null,
+                                snackbarMessage = "Entry updated"
+                            )
+                        }
+                    }
             } else if (state.editingExpense != null) {
-                repository.updateExpense(state.editingExpense.id, amount.paisa, state.editingExpense.categoryId, state.editRefInput.ifBlank { null })
-                    .onSuccess { _uiState.update { it.copy(editingExpense = null, snackbarMessage = "Expense updated") } }
+                repository.updateExpense(
+                    state.editingExpense.id,
+                    amount.paisa,
+                    state.editingExpense.categoryId,
+                    state.editRefInput.ifBlank { null })
+                    .onSuccess {
+                        _uiState.update {
+                            it.copy(
+                                editingExpense = null,
+                                snackbarMessage = "Expense updated"
+                            )
+                        }
+                    }
             }
         }
     }
 
     private fun confirmDelete() {
         val state = _uiState.value
-        val id    = state.pendingDeleteId ?: return
-        val type  = state.pendingDeleteType ?: return
+        val id = state.pendingDeleteId ?: return
+        val type = state.pendingDeleteType ?: return
         viewModelScope.launch {
             if (type == DeleteType.ENTRY) {
                 repository.deleteEntry(id)
-                    .onSuccess { _uiState.update { it.copy(pendingDeleteId = null, pendingDeleteType = null, snackbarMessage = "Entry deleted") } }
+                    .onSuccess {
+                        _uiState.update {
+                            it.copy(
+                                pendingDeleteId = null,
+                                pendingDeleteType = null,
+                                snackbarMessage = "Entry deleted"
+                            )
+                        }
+                    }
             } else {
                 repository.deleteExpense(id)
-                    .onSuccess { _uiState.update { it.copy(pendingDeleteId = null, pendingDeleteType = null, snackbarMessage = "Expense deleted") } }
+                    .onSuccess {
+                        _uiState.update {
+                            it.copy(
+                                pendingDeleteId = null,
+                                pendingDeleteType = null,
+                                snackbarMessage = "Expense deleted"
+                            )
+                        }
+                    }
             }
         }
     }

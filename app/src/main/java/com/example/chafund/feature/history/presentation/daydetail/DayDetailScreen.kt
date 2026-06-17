@@ -76,13 +76,6 @@ fun DayDetailScreen(
             TopAppBar(
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 title = { Text(state.dateLabel, fontSize = 15.sp, fontWeight = FontWeight.W500) },
-               /* actions = {
-                    if (!state.isReadOnly) {
-                        IconButton(onClick = {}) {
-                            Icon(Icons.Default.Edit, "Edit", tint = AppColors.BalanceTextLight)
-                        }
-                    }
-                },*/
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
