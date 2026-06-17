@@ -1,11 +1,14 @@
 package com.example.chafund.navigation
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
+import android.annotation.SuppressLint
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.chafund.bottombar.ChaFundBottomBar
@@ -19,11 +22,9 @@ import com.example.chafund.feature.history.presentation.monthly.MonthlyHistorySc
 import com.example.chafund.feature.history.presentation.monthly.MonthlyHistoryViewModel
 import com.example.chafund.feature.settings.presentation.settings.SettingsScreenRoot
 import com.example.chafund.feature.settings.presentation.settings.SettingsViewModel
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.getValue
-import androidx.navigation.compose.currentBackStackEntryAsState
 import org.koin.androidx.compose.koinViewModel
 
+@SuppressLint("RestrictedApi")
 @Composable
 fun AppNavHost(navigator: Navigator) {
     val navController = rememberNavController()
@@ -50,11 +51,9 @@ fun AppNavHost(navigator: Navigator) {
     }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-    val topLevelRoutes = TopLevelDestination.entries.map { it.route::class.qualifiedName }
-    val shouldShowBottomBar = topLevelRoutes.contains(
-        currentRoute?.substringBefore("?")
-    )
+    val shouldShowBottomBar = TopLevelDestination.entries.any { dest ->
+        navBackStackEntry?.destination?.hasRoute(dest.route::class) == true
+    }
 
 
     Scaffold(

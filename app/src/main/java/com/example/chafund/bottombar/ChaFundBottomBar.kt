@@ -9,9 +9,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.chafund.navigation.Navigator
-import com.example.chafund.navigation.Route
 import com.example.chafund.navigation.TopLevelDestination
 import com.example.chafund.ui.theme.AppColors
 
@@ -21,11 +21,10 @@ fun ChaFundBottomBar(
     navigator: Navigator,
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = backStackEntry?.destination?.route
 
     NavigationBar {
         TopLevelDestination.entries.forEach { dest ->
-            val selected = isDestinationSelected(currentRoute, dest)
+            val selected = backStackEntry?.destination?.hasRoute(dest.route::class) == true
             NavigationBarItem(
                 selected = selected,
                 onClick  = { navigator.navigateToTopLevel(dest) },
@@ -48,10 +47,3 @@ fun ChaFundBottomBar(
     }
 }
 
-private fun isDestinationSelected(currentRoute: String?, dest: TopLevelDestination): Boolean {
-    return when (dest) {
-        TopLevelDestination.HOME     -> currentRoute?.contains("Home") == true
-        TopLevelDestination.MONTHS   -> currentRoute?.contains("MonthlyHistory") == true
-        TopLevelDestination.SETTINGS -> currentRoute?.contains("Settings") == true
-    }
-}
