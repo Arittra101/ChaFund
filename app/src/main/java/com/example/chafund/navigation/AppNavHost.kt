@@ -1,13 +1,7 @@
 package com.example.chafund.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -15,26 +9,30 @@ import androidx.navigation.toRoute
 import com.example.chafund.bottombar.ChaFundBottomBar
 import com.example.chafund.feature.fund.presentation.home.HomeScreenRoot
 import com.example.chafund.feature.fund.presentation.home.HomeViewModel
+import com.example.chafund.feature.history.presentation.daily.DailyHistoryScreenRoot
+import com.example.chafund.feature.history.presentation.daily.DailyHistoryViewModel
+import com.example.chafund.feature.history.presentation.daydetail.DayDetailScreenRoot
+import com.example.chafund.feature.history.presentation.daydetail.DayDetailViewModel
+import com.example.chafund.feature.history.presentation.monthly.MonthlyHistoryScreenRoot
+import com.example.chafund.feature.history.presentation.monthly.MonthlyHistoryViewModel
+import com.example.chafund.feature.settings.presentation.settings.SettingsScreenRoot
+import com.example.chafund.feature.settings.presentation.settings.SettingsViewModel
+import androidx.compose.material3.Scaffold
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun AppNavHost(navigator: Navigator) {
     val navController = rememberNavController()
 
-    // Collect nav events and apply to navController
     LaunchedEffect(navigator) {
         navigator.navEvents.collect { event ->
             when (event) {
                 is NavEvent.NavigateTo -> navController.navigate(event.route)
                 is NavEvent.NavigateTopLevel -> {
-                    val dest = event.dest
-                    val route: Route = when (dest) {
-                        TopLevelDestination.HOME    -> Route.Home
-                        TopLevelDestination.DAILY   -> {
-                            // Navigate to current month; monthId resolved on the screen
-                            Route.DailyHistory(monthId = 0L)
-                        }
-                        TopLevelDestination.MONTHS  -> Route.MonthlyHistory
+                    val route: Route = when (event.dest) {
+                        TopLevelDestination.HOME     -> Route.Home
+                        TopLevelDestination.DAILY    -> Route.DailyHistory(monthId = 0L)
+                        TopLevelDestination.MONTHS   -> Route.MonthlyHistory
                         TopLevelDestination.SETTINGS -> Route.Settings
                     }
                     navController.navigate(route) {
@@ -50,38 +48,34 @@ fun AppNavHost(navigator: Navigator) {
 
     Scaffold(
         bottomBar = { ChaFundBottomBar(navController, navigator) },
-    ) { innerPadding ->
-        NavHost(
-            navController    = navController,
-            startDestination = Route.Home,
-        ) {
+    ) { _ ->
+        NavHost(navController = navController, startDestination = Route.Home) {
             composable<Route.Home> {
-                val vm: HomeViewModel = koinViewModel()
-                HomeScreenRoot(viewModel = vm)
+                HomeScreenRoot(viewModel = koinViewModel<HomeViewModel>())
             }
-            composable<Route.DailyHistory> {
-                // Implemented in CHF-37
-                PlaceholderScreen("Daily History")
+            composable<Route.DailyHistory> { backStack ->
+                val route = backStack.toRoute<Route.DailyHistory>()
+                DailyHistoryScreenRoot(
+                    viewModel  = koinViewModel<DailyHistoryViewModel>(),
+                    monthId    = route.monthId,
+                    onDayClick = { monthId, date -> navController.navigate(Route.DayDetail(monthId, date)) },
+                )
             }
             composable<Route.DayDetail> {
-                // Implemented in CHF-38
-                PlaceholderScreen("Day Detail")
+                DayDetailScreenRoot(
+                    viewModel = koinViewModel<DayDetailViewModel>(),
+                    onBack    = { navController.popBackStack() },
+                )
             }
             composable<Route.MonthlyHistory> {
-                // Implemented in CHF-41
-                PlaceholderScreen("Monthly History")
+                MonthlyHistoryScreenRoot(
+                    viewModel    = koinViewModel<MonthlyHistoryViewModel>(),
+                    onMonthClick = { monthId -> navController.navigate(Route.DailyHistory(monthId)) },
+                )
             }
             composable<Route.Settings> {
-                // Implemented in CHF-44
-                PlaceholderScreen("Settings")
+                SettingsScreenRoot(viewModel = koinViewModel<SettingsViewModel>())
             }
         }
-    }
-}
-
-@Composable
-private fun PlaceholderScreen(title: String) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(title)
     }
 }

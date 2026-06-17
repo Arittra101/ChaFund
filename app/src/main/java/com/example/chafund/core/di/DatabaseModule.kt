@@ -21,4 +21,5 @@ val databaseModule = module {
     single { get<ChaFundDb>().timeCategoryDao() }
     single { get<ChaFundDb>().entryDao() }
     single { get<ChaFundDb>().expenseDao() }
+    single { get<ChaFundDb>().historyDao() }
 }

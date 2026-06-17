@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.example.chafund.core.data.database.dao.EntryDao
 import com.example.chafund.core.data.database.dao.ExpenseDao
+import com.example.chafund.core.data.database.dao.HistoryDao
 import com.example.chafund.core.data.database.dao.MonthDao
 import com.example.chafund.core.data.database.dao.TimeCategoryDao
 import com.example.chafund.core.data.database.entity.EntryEntity
@@ -26,4 +27,5 @@ abstract class ChaFundDb : RoomDatabase() {
     abstract fun timeCategoryDao(): TimeCategoryDao
     abstract fun entryDao(): EntryDao
     abstract fun expenseDao(): ExpenseDao
+    abstract fun historyDao(): HistoryDao
 }
