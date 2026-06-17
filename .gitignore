@@ -101,3 +101,6 @@ desktop.ini
 **/usage.txt
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea/vcs.xml
+/app/release/baselineProfiles/0/app-release.dm
+/app/release/baselineProfiles/1/app-release.dm
+/app/release/output-metadata.json
