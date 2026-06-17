@@ -53,7 +53,7 @@ class DailyHistoryViewModel(
                     repository.observeDailySummaries(monthId ?: session.currentMonthId.value),
                     session.currentMonthId,
                 ) { months, days, currentId ->
-                    val month = months.find { it.id == monthId }
+                    val month = months.find { it.id == (monthId ?: session.currentMonthId.value) }
                     DailyHistoryUiState(
                         monthLabel = month?.label ?: "",
                         isReadOnly = monthId != currentId,

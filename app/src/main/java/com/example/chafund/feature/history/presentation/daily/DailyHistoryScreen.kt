@@ -88,20 +88,20 @@ fun DailyHistoryScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     MetricCard(
-                        label      = "Spent",
-                        value      = state.spent,
-                        fillColor  = AppColors.SpentFill,
+                        label = "Spent",
+                        value = state.spent,
+                        fillColor = AppColors.SpentFill,
                         labelColor = AppColors.SpentText,
                         valueColor = AppColors.SpentText,
-                        modifier   = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f),
                     )
                     MetricCard(
-                        label      = "Balance",
-                        value      = state.balance,
-                        fillColor  = AppColors.BalanceFillLight,
+                        label = "Balance",
+                        value = state.balance,
+                        fillColor = AppColors.BalanceFillLight,
                         labelColor = AppColors.BalanceTextLight,
                         valueColor = AppColors.BalanceTextLight,
-                        modifier   = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
