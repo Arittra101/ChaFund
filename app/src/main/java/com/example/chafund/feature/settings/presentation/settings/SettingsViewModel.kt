@@ -23,10 +23,15 @@ data class SettingsUiState(
     // Delete month sheet
     val showDeleteMonthSheet: Boolean = false,
     val pendingDeleteMonthId: Long? = null,
-    // Category sheet
+    // Add category sheet
     val showAddCategorySheet: Boolean = false,
     val categoryInput: String = "",
     val categoryError: String? = null,
+    // Rename/delete category sheet
+    val editingCategoryId: Long? = null,
+    val editingCategoryName: String = "",
+    val renameInput: String = "",
+    val renameError: String? = null,
     val snackbarMessage: String? = null,
 )
 
@@ -40,6 +45,10 @@ sealed interface SettingsEvent {
     data object HideAddCategorySheet : SettingsEvent
     data class OnCategoryInputChange(val value: String) : SettingsEvent
     data object SaveCategory : SettingsEvent
+    data class EditCategory(val id: Long, val currentName: String) : SettingsEvent
+    data object HideEditCategorySheet : SettingsEvent
+    data class OnRenameInputChange(val value: String) : SettingsEvent
+    data object SaveRename : SettingsEvent
     data class DeleteCategory(val id: Long) : SettingsEvent
     data class SetTheme(val mode: ThemeMode) : SettingsEvent
     data object SnackbarDismissed : SettingsEvent
@@ -79,6 +88,10 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
             SettingsEvent.HideAddCategorySheet -> _uiState.update { it.copy(showAddCategorySheet = false) }
             is SettingsEvent.OnCategoryInputChange -> _uiState.update { it.copy(categoryInput = event.value, categoryError = null) }
             SettingsEvent.SaveCategory         -> saveCategory()
+            is SettingsEvent.EditCategory      -> _uiState.update { it.copy(editingCategoryId = event.id, editingCategoryName = event.currentName, renameInput = event.currentName, renameError = null) }
+            SettingsEvent.HideEditCategorySheet -> _uiState.update { it.copy(editingCategoryId = null) }
+            is SettingsEvent.OnRenameInputChange -> _uiState.update { it.copy(renameInput = event.value, renameError = null) }
+            SettingsEvent.SaveRename           -> saveRename()
             is SettingsEvent.DeleteCategory    -> deleteCategory(event.id)
             is SettingsEvent.SetTheme          -> viewModelScope.launch { repository.setTheme(event.mode) }
             SettingsEvent.SnackbarDismissed    -> _uiState.update { it.copy(snackbarMessage = null) }
@@ -91,6 +104,17 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
             repository.deletePastMonth(id)
                 .onSuccess { _uiState.update { it.copy(pendingDeleteMonthId = null, snackbarMessage = "Month deleted") } }
                 .onError   { _uiState.update { it.copy(snackbarMessage = "Cannot delete current month") } }
+        }
+    }
+
+    private fun saveRename() {
+        val id   = _uiState.value.editingCategoryId ?: return
+        val name = _uiState.value.renameInput.trim()
+        if (name.isBlank()) { _uiState.update { it.copy(renameError = "Name cannot be empty") }; return }
+        viewModelScope.launch {
+            repository.renameCategory(id, name)
+                .onSuccess { _uiState.update { it.copy(editingCategoryId = null, snackbarMessage = "Category renamed") } }
+                .onError   { _uiState.update { it.copy(renameError = "Name already exists") } }
         }
     }
 

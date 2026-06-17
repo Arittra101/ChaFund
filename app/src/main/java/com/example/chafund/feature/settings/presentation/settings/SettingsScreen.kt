@@ -128,7 +128,7 @@ fun SettingsScreen(
                             CategoryChip(
                                 label     = cat.name,
                                 chipColor = AppColors.chipColorFor(index),
-                                onClick   = {},
+                                onClick   = { onEvent(SettingsEvent.EditCategory(cat.id, cat.name)) },
                             )
                         }
                         // "+ Add" chip
@@ -200,6 +200,36 @@ fun SettingsScreen(
             onConfirm = { onEvent(SettingsEvent.ConfirmDeleteMonth) },
             onDismiss = { onEvent(SettingsEvent.DismissDeleteMonth) },
         )
+    }
+
+    // Rename / delete category sheet
+    if (state.editingCategoryId != null) {
+        ModalBottomSheet(onDismissRequest = { onEvent(SettingsEvent.HideEditCategorySheet) }) {
+            Column(
+                modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text("Edit \"${state.editingCategoryName}\"", fontSize = 17.sp, fontWeight = FontWeight.W500)
+                OutlinedTextField(
+                    value         = state.renameInput,
+                    onValueChange = { onEvent(SettingsEvent.OnRenameInputChange(it)) },
+                    label         = { Text("Category name") },
+                    isError       = state.renameError != null,
+                    modifier      = Modifier.fillMaxWidth(),
+                    singleLine    = true,
+                )
+                if (state.renameError != null) {
+                    Text(state.renameError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp)
+                }
+                PrimaryButton(text = "Rename", onClick = { onEvent(SettingsEvent.SaveRename) }, enabled = state.renameInput.isNotBlank())
+                androidx.compose.material3.OutlinedButton(
+                    onClick  = { onEvent(SettingsEvent.DeleteCategory(state.editingCategoryId!!)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors   = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                ) { Text("Delete category") }
+                Spacer(Modifier.height(8.dp))
+            }
+        }
     }
 
     // Add category sheet
