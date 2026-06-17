@@ -1,5 +1,6 @@
 package com.example.chafund.core.di
 
+import com.example.chafund.feature.fund.di.fundModule
 import org.koin.core.module.Module
 
 fun appModules(): List<Module> = listOf(
@@ -7,7 +8,8 @@ fun appModules(): List<Module> = listOf(
     storageModule,
     sessionModule,
     utilsModule,
-    // fundModule,       // CHF-30
+    navigationModule,
+    fundModule,
     // historyModule,    // CHF-36
     // settingsModule,   // CHF-43
 )
