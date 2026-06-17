@@ -1,0 +1,101 @@
+# ============================================================
+# Gradle
+# ============================================================
+.gradle/
+**/build/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+.gradletasknamecache
+
+# ============================================================
+# Android Studio / IntelliJ IDEA
+# ============================================================
+*.iml
+/.idea/caches/
+/.idea/libraries/
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+/.idea/.gitignore
+/.idea/deploymentTargetSelector.xml
+/.idea/appInsightsSettings.xml
+# copilot / AI tool caches
+/.idea/copilot*
+
+# Keep these in VCS (shared project settings):
+# !/.idea/runConfigurations/
+# !/.idea/misc.xml
+# !/.idea/gradle.xml
+
+# ============================================================
+# Native build
+# ============================================================
+.externalNativeBuild/
+.cxx/
+
+# ============================================================
+# Kotlin / KSP generated sources
+# ============================================================
+**/generated/
+**/kspCaches/
+
+# ============================================================
+# Room schema export
+# IMPORTANT: Keep in VCS — required for MigrationTestHelper
+# ============================================================
+# !app/schemas/     ← intentionally not ignored
+
+# ============================================================
+# Sensitive & local-only files
+# ============================================================
+local.properties
+keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pk8
+google-services.json
+firebase.json
+.env
+secrets.properties
+
+# ============================================================
+# OS artifacts
+# ============================================================
+.DS_Store
+**/.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================================
+# Capture / profiling output
+# ============================================================
+/captures
+*.hprof
+*.trace
+
+# ============================================================
+# Test output
+# ============================================================
+/test-results/
+/lint-results*/
+*.html          # lint reports
+*.xml           # lint reports (keep src XMLs via negation if needed)
+!app/src/**/*.xml
+!app/src/**/*.xml
+
+# ============================================================
+# APK / AAB artefacts  (built by CI — not stored in repo)
+# ============================================================
+*.apk
+*.aab
+*.ap_
+
+# ============================================================
+# ProGuard mapping (upload to Play Console separately)
+# ============================================================
+**/mapping.txt
+**/seeds.txt
+**/usage.txt
