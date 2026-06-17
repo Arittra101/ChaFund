@@ -17,11 +17,6 @@ enum class TopLevelDestination(
         icon  = Icons.Default.Home,
         route = Route.Home,
     ),
-    DAILY(
-        label = "Daily",
-        icon  = Icons.Default.CalendarMonth,
-        route = Route.DailyHistory(monthId = 0L),
-    ),
     MONTHS(
         label = "Months",
         icon  = Icons.Default.BarChart,

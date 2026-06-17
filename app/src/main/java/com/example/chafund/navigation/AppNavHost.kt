@@ -18,6 +18,8 @@ import com.example.chafund.feature.history.presentation.monthly.MonthlyHistoryVi
 import com.example.chafund.feature.settings.presentation.settings.SettingsScreenRoot
 import com.example.chafund.feature.settings.presentation.settings.SettingsViewModel
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.getValue
+import androidx.navigation.compose.currentBackStackEntryAsState
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -31,7 +33,6 @@ fun AppNavHost(navigator: Navigator) {
                 is NavEvent.NavigateTopLevel -> {
                     val route: Route = when (event.dest) {
                         TopLevelDestination.HOME     -> Route.Home
-                        TopLevelDestination.DAILY    -> Route.DailyHistory(monthId = 0L)
                         TopLevelDestination.MONTHS   -> Route.MonthlyHistory
                         TopLevelDestination.SETTINGS -> Route.Settings
                     }
@@ -46,8 +47,16 @@ fun AppNavHost(navigator: Navigator) {
         }
     }
 
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val topLevelRoutes = TopLevelDestination.entries.map { it.route::class.qualifiedName }
+    val shouldShowBottomBar = topLevelRoutes.contains(
+        currentRoute?.substringBefore("?")
+    )
+
+
     Scaffold(
-        bottomBar = { ChaFundBottomBar(navController, navigator) },
+        bottomBar = { if (shouldShowBottomBar) ChaFundBottomBar(navController, navigator) },
     ) { _ ->
         NavHost(navController = navController, startDestination = Route.Home) {
             composable<Route.Home> {

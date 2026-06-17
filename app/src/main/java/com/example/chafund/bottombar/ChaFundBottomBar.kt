@@ -51,7 +51,6 @@ fun ChaFundBottomBar(
 private fun isDestinationSelected(currentRoute: String?, dest: TopLevelDestination): Boolean {
     return when (dest) {
         TopLevelDestination.HOME     -> currentRoute?.contains("Home") == true
-        TopLevelDestination.DAILY    -> currentRoute?.contains("DailyHistory") == true
         TopLevelDestination.MONTHS   -> currentRoute?.contains("MonthlyHistory") == true
         TopLevelDestination.SETTINGS -> currentRoute?.contains("Settings") == true
     }

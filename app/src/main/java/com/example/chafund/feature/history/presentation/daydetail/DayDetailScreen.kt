@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -73,15 +74,15 @@ fun DayDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 title = { Text(state.dateLabel, fontSize = 15.sp, fontWeight = FontWeight.W500) },
-                actions = {
+               /* actions = {
                     if (!state.isReadOnly) {
                         IconButton(onClick = {}) {
                             Icon(Icons.Default.Edit, "Edit", tint = AppColors.BalanceTextLight)
                         }
                     }
-                },
+                },*/
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
