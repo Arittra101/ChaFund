@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 
 enum class ThemeMode { LIGHT, DARK, SYSTEM }
 
@@ -46,7 +47,7 @@ private val DarkColorScheme = darkColorScheme(
     surface = Grey10,
     onSurface = Grey90,
     surfaceVariant = Grey20,
-    onSurfaceVariant = Grey90,
+    onSurfaceVariant = Grey80,
 
     error = NegativeRedDark,
     onError = Black,
@@ -63,9 +64,13 @@ fun ChaFundTheme(
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
 
-    MaterialTheme(
-        colorScheme = if (dark) DarkColorScheme else LightColorScheme,
-        typography = AppTypography,
-        content = content,
-    )
+    CompositionLocalProvider(
+        LocalAppColors provides if (dark) DarkAppColorScheme else LightAppColorScheme,
+    ) {
+        MaterialTheme(
+            colorScheme = if (dark) DarkColorScheme else LightColorScheme,
+            typography = AppTypography,
+            content = content,
+        )
+    }
 }
