@@ -24,6 +24,7 @@ fun AmountField(
     modifier: Modifier = Modifier,
     label: String = "Amount (Tk)",
     error: String? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(8.dp)
     Column(modifier = modifier) {
@@ -46,6 +47,7 @@ fun AmountField(
             singleLine    = true,
             isError       = error != null,
             shape         = shape,
+            trailingIcon  = trailingIcon,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),

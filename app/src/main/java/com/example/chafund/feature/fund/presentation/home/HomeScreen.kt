@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,7 +32,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.chafund.core.presentation.components.AmountField
+import com.example.chafund.core.presentation.components.CalculatorBottomSheet
 import com.example.chafund.core.presentation.components.CategoryChip
 import com.example.chafund.core.presentation.components.LockIndicator
 import com.example.chafund.core.presentation.components.LockedMonthBadge
@@ -144,7 +148,19 @@ private fun AddCard(
     state: HomeUiState,
     onEvent: (HomeUiEvent) -> Unit,
 ) {
+    var showCalculator by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(14.dp)
+
+    if (showCalculator) {
+        CalculatorBottomSheet(
+            onDone = { result ->
+                onEvent(HomeUiEvent.OnAmountChange(result))
+                showCalculator = false
+            },
+            onDismiss = { showCalculator = false },
+        )
+    }
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -165,11 +181,20 @@ private fun AddCard(
                 },
             )
 
-            // Amount field
+            // Amount field with calculator icon
             AmountField(
                 value = state.amountInput,
                 onValueChange = { onEvent(HomeUiEvent.OnAmountChange(it)) },
                 error = state.amountError,
+                trailingIcon = {
+                    IconButton(onClick = { showCalculator = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Calculate,
+                            contentDescription = "Open calculator",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
             )
 
             // Mode-dependent field
