@@ -109,10 +109,21 @@ fun CalculatorBottomSheet(
         display = if (display.length <= 1) "0" else display.dropLast(1)
     }
 
+    fun formattedDisplay(): String {
+        val value = display.toDoubleOrNull() ?: 0.0
+        return if (value == kotlin.math.floor(value) && !value.isInfinite())
+            value.toLong().toString()
+        else
+            "%.2f".format(value).trimEnd('0').trimEnd('.')
+    }
+
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            // Auto-fill the amount field if the user typed something before swiping away
+            if (display != "0") onDone(formattedDisplay()) else onDismiss()
+        },
         sheetState = sheetState,
     ) {
         Column(
@@ -197,14 +208,7 @@ fun CalculatorBottomSheet(
 
             PrimaryButton(
                 text = "Use this amount",
-                onClick = {
-                    val value = display.toDoubleOrNull() ?: 0.0
-                    val result = if (value == kotlin.math.floor(value) && !value.isInfinite())
-                        value.toLong().toString()
-                    else
-                        "%.2f".format(value).trimEnd('0').trimEnd('.')
-                    onDone(result)
-                },
+                onClick = { onDone(formattedDisplay()) },
             )
         }
     }
