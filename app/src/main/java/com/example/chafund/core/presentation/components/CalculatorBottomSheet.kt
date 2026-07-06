@@ -36,11 +36,14 @@ import com.example.chafund.ui.theme.AppColors
 fun CalculatorBottomSheet(
     onDone: (String) -> Unit,
     onDismiss: () -> Unit,
+    initialValue: String = "",
 ) {
-    var display by remember { mutableStateOf("0") }
+    val seed = initialValue.takeIf { it.toDoubleOrNull() != null }?.trimEnd('.') ?: "0"
+    var display by remember { mutableStateOf(seed) }
     var leftOperand by remember { mutableStateOf<Double?>(null) }
     var pendingOp by remember { mutableStateOf<String?>(null) }
-    var awaitingOperand by remember { mutableStateOf(false) }
+    // Seeded value behaves like a shown result: a digit starts fresh, an operator builds on it
+    var awaitingOperand by remember { mutableStateOf(seed != "0") }
 
     fun formatNum(v: Double): String {
         if (v.isInfinite() || v.isNaN()) return "0"

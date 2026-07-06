@@ -156,6 +156,7 @@ private fun AddCard(
                 showCalculator = false
             },
             onDismiss = { showCalculator = false },
+            initialValue = state.amountInput,
         )
     }
 
