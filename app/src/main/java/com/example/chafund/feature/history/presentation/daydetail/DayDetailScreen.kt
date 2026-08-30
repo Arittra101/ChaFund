@@ -44,6 +44,8 @@ import com.example.chafund.core.presentation.components.CategoryChip
 import com.example.chafund.core.presentation.components.ConfirmationBottomSheet
 import com.example.chafund.core.presentation.components.EmptyView
 import com.example.chafund.core.presentation.components.MetricCard
+import com.example.chafund.core.presentation.components.NameOption
+import com.example.chafund.core.presentation.components.NamePicker
 import com.example.chafund.core.presentation.components.PrimaryButton
 import com.example.chafund.core.utils.Money
 import com.example.chafund.feature.history.domain.model.ExpenseGrouped
@@ -247,7 +249,8 @@ private fun EntryRow(
                 fontWeight = FontWeight.W500,
                 color      = AppColors.EntryDeltaText,
             )
-            val meta = if (!entry.ref.isNullOrBlank()) "${entry.ref} · ${entry.time}" else entry.time
+            val label = entry.displayLabel
+            val meta = if (!label.isNullOrBlank()) "$label · ${entry.time}" else entry.time
             Text(text = meta, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (!isReadOnly) {
@@ -320,19 +323,31 @@ private fun EditSheet(state: DayDetailUiState, onEvent: (DayDetailEvent) -> Unit
             onValueChange = { onEvent(DayDetailEvent.OnEditAmountChange(it)) },
             error         = state.editAmountError,
         )
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Ref note · optional", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            OutlinedTextField(
-                value         = state.editRefInput,
-                onValueChange = { if (it.length <= 80) onEvent(DayDetailEvent.OnEditRefChange(it)) },
-                modifier      = Modifier.fillMaxWidth(),
-                placeholder   = { Text("e.g. office collection", fontSize = 13.sp) },
-                singleLine    = true,
-                shape         = RoundedCornerShape(8.dp),
-                colors        = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
-                ),
+        if (state.editingEntry != null) {
+            NamePicker(
+                query = state.editNameQuery,
+                suggestions = state.editNameSuggestions.map { NameOption(it.id, it.label) },
+                selectedLabel = state.editPersonLabel,
+                hasNames = state.people.isNotEmpty(),
+                onQueryChange = { onEvent(DayDetailEvent.OnEditNameQueryChange(it)) },
+                onSelect = { onEvent(DayDetailEvent.OnEditPersonSelect(it)) },
+                onClear = { onEvent(DayDetailEvent.OnEditPersonClear) },
             )
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Ref note · optional", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(
+                    value         = state.editRefInput,
+                    onValueChange = { if (it.length <= 80) onEvent(DayDetailEvent.OnEditRefChange(it)) },
+                    modifier      = Modifier.fillMaxWidth(),
+                    placeholder   = { Text("e.g. office collection", fontSize = 13.sp) },
+                    singleLine    = true,
+                    shape         = RoundedCornerShape(8.dp),
+                    colors        = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                    ),
+                )
+            }
         }
         PrimaryButton(text = "Save changes", onClick = { onEvent(DayDetailEvent.SaveEdit) })
     }

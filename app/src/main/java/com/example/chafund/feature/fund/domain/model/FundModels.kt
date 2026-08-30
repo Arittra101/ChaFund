@@ -8,6 +8,8 @@ data class Month(
     val month: Int,
     val label: String,
     val isCurrent: Boolean,
+    val cycleStartEpochDay: Long? = null,
+    val includePrevTail: Boolean = false,
 )
 
 data class TimeCategory(
@@ -15,6 +17,20 @@ data class TimeCategory(
     val name: String,
     val sortOrder: Int,
 )
+
+data class Group(
+    val id: Long,
+    val name: String,
+)
+
+data class Person(
+    val id: Long,
+    val name: String,
+    val groupId: Long,
+    val groupName: String,
+) {
+    val label: String get() = "$name ~ $groupName"
+}
 
 data class MonthSummary(
     val monthId: Long,

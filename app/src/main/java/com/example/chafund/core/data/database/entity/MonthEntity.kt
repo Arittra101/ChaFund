@@ -18,4 +18,8 @@ data class MonthEntity(
     val label: String,
     val isCurrent: Boolean,
     val createdAt: Long,
+    /** Optional custom cycle start in the previous calendar month (epoch-day). Null = plain month. */
+    val cycleStartEpochDay: Long? = null,
+    /** Whether the previous-month tail (from [cycleStartEpochDay]) is currently counted. */
+    val includePrevTail: Boolean = false,
 )

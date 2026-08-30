@@ -18,8 +18,11 @@ import com.example.chafund.feature.history.presentation.daily.DailyHistoryScreen
 import com.example.chafund.feature.history.presentation.daily.DailyHistoryViewModel
 import com.example.chafund.feature.history.presentation.daydetail.DayDetailScreenRoot
 import com.example.chafund.feature.history.presentation.daydetail.DayDetailViewModel
+import com.example.chafund.feature.history.presentation.entries.MonthEntriesScreenRoot
+import com.example.chafund.feature.history.presentation.entries.MonthEntriesViewModel
 import com.example.chafund.feature.history.presentation.monthly.MonthlyHistoryScreenRoot
 import com.example.chafund.feature.history.presentation.monthly.MonthlyHistoryViewModel
+import com.example.chafund.feature.settings.presentation.settings.NamesGroupsScreenRoot
 import com.example.chafund.feature.settings.presentation.settings.SettingsScreenRoot
 import com.example.chafund.feature.settings.presentation.settings.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -72,6 +75,13 @@ fun AppNavHost(navigator: Navigator) {
                     viewModel = koinViewModel<DailyHistoryViewModel>(),
                     monthId = route.monthId,
                     onDayClick = { monthId, date -> navController.navigate(Route.DayDetail(monthId, date)) },
+                    onOpenEntries = { monthId -> navController.navigate(Route.MonthEntries(monthId)) },
+                )
+            }
+            composable<Route.MonthEntries> {
+                MonthEntriesScreenRoot(
+                    viewModel = koinViewModel<MonthEntriesViewModel>(),
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable<Route.DayDetail> {
@@ -87,7 +97,16 @@ fun AppNavHost(navigator: Navigator) {
                 )
             }
             composable<Route.Settings> {
-                SettingsScreenRoot(viewModel = koinViewModel<SettingsViewModel>())
+                SettingsScreenRoot(
+                    viewModel = koinViewModel<SettingsViewModel>(),
+                    onOpenNamesGroups = { navController.navigate(Route.NamesGroups) },
+                )
+            }
+            composable<Route.NamesGroups> {
+                NamesGroupsScreenRoot(
+                    viewModel = koinViewModel<SettingsViewModel>(),
+                    onBack = { navController.popBackStack() },
+                )
             }
         }
     }

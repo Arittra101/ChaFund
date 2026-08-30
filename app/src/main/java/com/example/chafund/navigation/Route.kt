@@ -17,4 +17,10 @@ sealed interface Route {
 
     @Serializable
     data object Settings : Route
+
+    @Serializable
+    data object NamesGroups : Route
+
+    @Serializable
+    data class MonthEntries(val monthId: Long? = null) : Route
 }

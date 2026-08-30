@@ -2,6 +2,7 @@ package com.example.chafund.feature.history.data.mapper
 
 import com.example.chafund.core.data.database.entity.EntryEntity
 import com.example.chafund.core.data.database.projection.DailySummaryProjection
+import com.example.chafund.core.data.database.projection.EntryWithPersonProjection
 import com.example.chafund.core.data.database.projection.MonthSummaryProjection
 import com.example.chafund.core.data.database.relation.ExpenseWithCategory
 import com.example.chafund.core.utils.DateTimeFormat
@@ -21,31 +22,49 @@ fun DailySummaryProjection.toDomain() = DailySummary(
 )
 
 fun EntryEntity.toHistoryDomain() = HistoryEntry(
-    id          = id,
+    id = id,
     amountPaisa = amountPaisa,
-    ref         = ref,
-    time        = time,
-    date        = date,
-    monthId     = monthId,
+    ref = ref,
+    personId = personId,
+    personName = null,
+    groupName = null,
+    time = time,
+    date = date,
+    monthId = monthId,
+)
+
+fun EntryWithPersonProjection.toHistoryDomain() = HistoryEntry(
+    id = entry.id,
+    amountPaisa = entry.amountPaisa,
+    ref = entry.ref,
+    personId = entry.personId,
+    personName = personName,
+    groupName = groupName,
+    time = entry.time,
+    date = entry.date,
+    monthId = entry.monthId,
 )
 
 fun ExpenseWithCategory.toHistoryDomain() = HistoryExpense(
-    id                = expense.id,
-    amountPaisa       = expense.amountPaisa,
-    ref               = expense.ref,
-    time              = expense.time,
-    date              = expense.date,
-    monthId           = expense.monthId,
-    categoryId        = category.id,
-    categoryName      = category.name,
+    id = expense.id,
+    amountPaisa = expense.amountPaisa,
+    ref = expense.ref,
+    time = expense.time,
+    date = expense.date,
+    monthId = expense.monthId,
+    categoryId = category.id,
+    categoryName = category.name,
     categorySortOrder = category.sortOrder,
 )
 
 fun MonthSummaryProjection.toHistoryDomain() = HistoryMonth(
-    id           = monthId,
-    label        = label,
-    isCurrent    = isCurrent,
+    id = monthId,
+    label = label,
+    isCurrent = isCurrent,
     totalEntries = Money(totalEntriesPaisa),
-    totalSpent   = Money(totalSpentPaisa),
-    balance      = Money(totalEntriesPaisa - totalSpentPaisa),
+    totalSpent = Money(totalSpentPaisa),
+    balance = Money(totalEntriesPaisa - totalSpentPaisa),
+    cycleStartEpochDay = cycleStartEpochDay,
+    includePrevTail = includePrevTail,
+    monthFirstEpochDay = com.example.chafund.core.utils.MonthWindow.firstOfMonthEpochDay(year, month),
 )

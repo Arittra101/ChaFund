@@ -36,6 +36,15 @@ interface MonthDao {
     @Query("UPDATE Month SET isCurrent = 1 WHERE id = :id")
     suspend fun flagCurrent(id: Long): Int
 
+    @Query("UPDATE Month SET cycleStartEpochDay = :start, includePrevTail = 1 WHERE id = :id")
+    suspend fun setCycleStart(id: Long, start: Long): Int
+
+    @Query("UPDATE Month SET cycleStartEpochDay = NULL, includePrevTail = 0 WHERE id = :id")
+    suspend fun clearCycleStart(id: Long): Int
+
+    @Query("UPDATE Month SET includePrevTail = :include WHERE id = :id")
+    suspend fun setIncludePrevTail(id: Long, include: Boolean): Int
+
     @Transaction
     suspend fun promoteToCurrent(id: Long) {
         unflagAllCurrent()
@@ -51,6 +60,10 @@ interface MonthDao {
     @Query("DELETE FROM Month WHERE id = :id AND isCurrent = 0")
     suspend fun deletePastById(id: Long): Int
 
+    // Per-month totals are tail-aware: when a month has an active cycle
+    // (cycleStartEpochDay set AND includePrevTail = 1) its totals also count previous-month rows
+    // dated between the cycle start and the last day before this month begins. That tail-end
+    // epoch-day is derived from the month's year/month via SQLite's julianday().
     @Query("""
         SELECT
             m.id           AS monthId,
@@ -58,8 +71,22 @@ interface MonthDao {
             m.month        AS month,
             m.label        AS label,
             m.isCurrent    AS isCurrent,
-            IFNULL((SELECT SUM(amountPaisa) FROM Entry   WHERE monthId = m.id), 0) AS totalEntriesPaisa,
-            IFNULL((SELECT SUM(amountPaisa) FROM Expense WHERE monthId = m.id), 0) AS totalSpentPaisa
+            m.cycleStartEpochDay AS cycleStartEpochDay,
+            m.includePrevTail    AS includePrevTail,
+            IFNULL((
+                SELECT SUM(amountPaisa) FROM Entry e
+                WHERE e.monthId = m.id
+                   OR (m.cycleStartEpochDay IS NOT NULL AND m.includePrevTail = 1
+                       AND e.date BETWEEN m.cycleStartEpochDay
+                       AND CAST(julianday(m.year || '-' || substr('0' || m.month, -2, 2) || '-01') - 2440587.5 AS INTEGER) - 1)
+            ), 0) AS totalEntriesPaisa,
+            IFNULL((
+                SELECT SUM(amountPaisa) FROM Expense x
+                WHERE x.monthId = m.id
+                   OR (m.cycleStartEpochDay IS NOT NULL AND m.includePrevTail = 1
+                       AND x.date BETWEEN m.cycleStartEpochDay
+                       AND CAST(julianday(m.year || '-' || substr('0' || m.month, -2, 2) || '-01') - 2440587.5 AS INTEGER) - 1)
+            ), 0) AS totalSpentPaisa
         FROM Month m
         ORDER BY m.year DESC, m.month DESC
     """)

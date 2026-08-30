@@ -18,6 +18,7 @@ import androidx.room.PrimaryKey
     indices = [
         Index("monthId"),
         Index("date"),
+        Index("personId"),
     ],
 )
 data class EntryEntity(
@@ -25,6 +26,7 @@ data class EntryEntity(
     val monthId: Long,
     val amountPaisa: Long,
     val ref: String?,
+    val personId: Long? = null,
     val date: Long,        // epoch-day
     val time: String,      // "HH:mm"
     val createdAt: Long,

@@ -21,8 +21,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -45,6 +43,8 @@ import com.example.chafund.core.presentation.components.CategoryChip
 import com.example.chafund.core.presentation.components.LockIndicator
 import com.example.chafund.core.presentation.components.LockedMonthBadge
 import com.example.chafund.core.presentation.components.MetricCard
+import com.example.chafund.core.presentation.components.NameOption
+import com.example.chafund.core.presentation.components.NamePicker
 import com.example.chafund.core.presentation.components.PrimaryButton
 import com.example.chafund.core.presentation.components.SegmentedToggle
 import com.example.chafund.feature.fund.domain.model.TimeCategory
@@ -198,9 +198,15 @@ private fun AddCard(
 
             // Mode-dependent field
             if (state.addMode == AddMode.ENTRY) {
-                RefField(
-                    value = state.refInput,
-                    onChange = { onEvent(HomeUiEvent.OnRefChange(it)) },
+                NamePicker(
+                    query = state.nameQuery,
+                    suggestions = state.nameSuggestions.map { NameOption(it.id, it.label) },
+                    selectedLabel = state.selectedPersonLabel,
+                    hasNames = state.people.isNotEmpty(),
+                    onQueryChange = { onEvent(HomeUiEvent.OnNameQueryChange(it)) },
+                    onSelect = { onEvent(HomeUiEvent.OnPersonSelect(it)) },
+                    onClear = { onEvent(HomeUiEvent.OnPersonClear) },
+                    error = state.nameError,
                 )
             } else {
                 CategorySection(
@@ -227,29 +233,6 @@ private fun AddCard(
                 enabled = state.saveEnabled && !state.isSaving,
             )
         }
-    }
-}
-
-@Composable
-private fun RefField(value: String, onChange: (String) -> Unit) {
-    val shape = RoundedCornerShape(8.dp)
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = "Ref note · optional",
-            fontSize = 11.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        OutlinedTextField(
-            value = value,
-            onValueChange = { if (it.length <= 80) onChange(it) },
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("e.g. office collection", fontSize = 13.sp) },
-            singleLine = true,
-            shape = shape,
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
-            ),
-        )
     }
 }
 

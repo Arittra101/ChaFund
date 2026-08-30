@@ -15,10 +15,17 @@ data class HistoryEntry(
     val id: Long,
     val amountPaisa: Long,
     val ref: String?,
+    val personId: Long?,
+    val personName: String?,
+    val groupName: String?,
     val time: String,
     val date: Long,
     val monthId: Long,
-)
+) {
+    /** Preferred display label: "Name ~ Group" when linked, else the legacy ref. */
+    val displayLabel: String?
+        get() = if (personName != null && groupName != null) "$personName ~ $groupName" else ref
+}
 
 data class HistoryExpense(
     val id: Long,
@@ -46,4 +53,7 @@ data class HistoryMonth(
     val totalEntries: Money,
     val totalSpent: Money,
     val balance: Money,
+    val cycleStartEpochDay: Long? = null,
+    val includePrevTail: Boolean = false,
+    val monthFirstEpochDay: Long = 0L,
 )

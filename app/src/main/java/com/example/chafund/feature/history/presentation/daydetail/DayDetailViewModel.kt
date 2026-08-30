@@ -7,6 +7,7 @@ import androidx.navigation.toRoute
 import com.example.chafund.core.data.session.Session
 import com.example.chafund.core.domain.onSuccess
 import com.example.chafund.core.utils.Money
+import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.history.domain.HistoryRepository
 import com.example.chafund.feature.history.domain.model.ExpenseGrouped
 import com.example.chafund.feature.history.domain.model.HistoryEntry
@@ -28,12 +29,18 @@ data class DayDetailUiState(
     val entries: List<HistoryEntry> = emptyList(),
     val groups: List<ExpenseGrouped> = emptyList(),
     val totalSpent: Money = Money.Zero,
+    val people: List<Person> = emptyList(),
     // Edit state
     val editingEntry: HistoryEntry? = null,
     val editingExpense: HistoryExpense? = null,
     val editAmountInput: String = "",
     val editRefInput: String = "",
     val editAmountError: String? = null,
+    // Entry name picker (edit)
+    val editNameQuery: String = "",
+    val editNameSuggestions: List<Person> = emptyList(),
+    val editPersonId: Long? = null,
+    val editPersonLabel: String = "",
     // Delete state
     val pendingDeleteId: Long? = null,
     val pendingDeleteType: DeleteType? = null,
@@ -45,6 +52,9 @@ sealed interface DayDetailEvent {
     data class EditExpense(val expense: HistoryExpense) : DayDetailEvent
     data class OnEditAmountChange(val value: String) : DayDetailEvent
     data class OnEditRefChange(val value: String) : DayDetailEvent
+    data class OnEditNameQueryChange(val value: String) : DayDetailEvent
+    data class OnEditPersonSelect(val id: Long) : DayDetailEvent
+    data object OnEditPersonClear : DayDetailEvent
     data object SaveEdit : DayDetailEvent
     data class RequestDelete(val id: Long, val type: DeleteType) : DayDetailEvent
     data object ConfirmDelete : DayDetailEvent
@@ -73,9 +83,10 @@ class DayDetailViewModel(
     private fun observe() {
         viewModelScope.launch {
             combine(
-                repository.observeEntriesForDay(monthId, date),
-                repository.observeExpensesForDay(monthId, date),
-            ) { entries, groups ->
+                repository.observeEntriesForDay(date),
+                repository.observeExpensesForDay(date),
+                repository.observePeople(),
+            ) { entries, groups, people ->
                 val totalSpent =
                     groups.flatMap { it.expenses }.sumOf { it.amountPaisa }.let { Money(it) }
                 val dateLabel = com.example.chafund.core.utils.DateTimeFormat.formatDate(date)
@@ -86,6 +97,7 @@ class DayDetailViewModel(
                     entries = entries,
                     groups = groups,
                     totalSpent = totalSpent,
+                    people = people,
                 )
             }.collect { _uiState.value = it }
         }
@@ -94,11 +106,15 @@ class DayDetailViewModel(
     fun onEvent(event: DayDetailEvent) {
         when (event) {
             is DayDetailEvent.EditEntry -> _uiState.update {
+                val hasPerson = event.entry.personId != null && event.entry.personName != null
                 it.copy(
                     editingEntry = event.entry,
                     editingExpense = null,
                     editAmountInput = Money(event.entry.amountPaisa).paisa.div(100.0).toString(),
-                    editRefInput = event.entry.ref ?: "",
+                    editPersonId = event.entry.personId,
+                    editPersonLabel = if (hasPerson) "${event.entry.personName} ~ ${event.entry.groupName}" else "",
+                    editNameQuery = "",
+                    editNameSuggestions = emptyList(),
                 )
             }
 
@@ -116,6 +132,25 @@ class DayDetailViewModel(
             }
 
             is DayDetailEvent.OnEditRefChange -> _uiState.update { it.copy(editRefInput = event.value) }
+
+            is DayDetailEvent.OnEditNameQueryChange -> _uiState.update {
+                val updated = it.copy(editNameQuery = event.value, editPersonId = null, editPersonLabel = "")
+                updated.copy(editNameSuggestions = filterSuggestions(updated))
+            }
+            is DayDetailEvent.OnEditPersonSelect -> _uiState.update { state ->
+                val person = state.people.find { it.id == event.id } ?: return@update state
+                state.copy(
+                    editPersonId = person.id,
+                    editPersonLabel = person.label,
+                    editNameQuery = "",
+                    editNameSuggestions = emptyList(),
+                )
+            }
+            DayDetailEvent.OnEditPersonClear -> _uiState.update {
+                val updated = it.copy(editPersonId = null, editPersonLabel = "", editNameQuery = "")
+                updated.copy(editNameSuggestions = filterSuggestions(updated))
+            }
+
             DayDetailEvent.SaveEdit -> saveEdit()
             is DayDetailEvent.RequestDelete -> _uiState.update {
                 it.copy(pendingDeleteId = event.id, pendingDeleteType = event.type)
@@ -140,6 +175,15 @@ class DayDetailViewModel(
         }
     }
 
+    private fun filterSuggestions(state: DayDetailUiState): List<Person> {
+        if (state.editPersonId != null) return emptyList()
+        val q = state.editNameQuery.trim()
+        if (q.isEmpty()) return state.people
+        return state.people.filter {
+            it.name.contains(q, ignoreCase = true) || it.groupName.contains(q, ignoreCase = true)
+        }
+    }
+
     private fun saveEdit() {
         val state = _uiState.value
         val amount = Money.fromTkString(state.editAmountInput)
@@ -152,7 +196,7 @@ class DayDetailViewModel(
                 repository.updateEntry(
                     state.editingEntry.id,
                     amount.paisa,
-                    state.editRefInput.ifBlank { null })
+                    state.editPersonId)
                     .onSuccess {
                         _uiState.update {
                             it.copy(
