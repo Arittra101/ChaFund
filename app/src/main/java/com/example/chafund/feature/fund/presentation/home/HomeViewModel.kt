@@ -25,7 +25,7 @@ class HomeViewModel(
 
     init {
         observeData()
-        updateTodayHint()
+        selectDate(LocalDate.now().toEpochDay())
     }
 
     private fun observeData() {
@@ -55,11 +55,17 @@ class HomeViewModel(
         }
     }
 
-    private fun updateTodayHint() {
+    private fun selectDate(epochDay: Long) {
+        val date = LocalDate.ofEpochDay(epochDay)
         val today = LocalDate.now()
-        val hint =
-            "${DateTimeFormat.formatDateShort(today)} · ${DateTimeFormat.dayNameShort(today)} · auto-tracked"
-        _uiState.update { it.copy(todayHint = hint) }
+        val sameMonth = date.year == today.year && date.monthValue == today.monthValue
+        val label = "${DateTimeFormat.formatDateShort(date)} · ${DateTimeFormat.dayNameShort(date)}"
+        val hint = when {
+            date == today -> "Filed under ${DateTimeFormat.monthName(today.year, today.monthValue)} · today"
+            sameMonth -> "Filed under ${DateTimeFormat.monthName(date.year, date.monthValue)}"
+            else -> "Files into ${DateTimeFormat.monthName(date.year, date.monthValue)} — next month"
+        }
+        _uiState.update { it.copy(selectedDateEpochDay = epochDay, dateLabel = label, dateHint = hint) }
     }
 
     fun onEvent(event: HomeUiEvent) {
@@ -77,6 +83,7 @@ class HomeViewModel(
                 )
             }
 
+            is HomeUiEvent.OnDateSelected -> selectDate(event.epochDay)
             HomeUiEvent.OnSave -> onSave()
             HomeUiEvent.OnSnackbarDismissed -> _uiState.update { it.copy(snackbarMessage = null) }
         }
@@ -179,9 +186,9 @@ class HomeViewModel(
 
         viewModelScope.launch {
             val result = if (state.addMode == AddMode.ENTRY) {
-                repository.addEntry(amount, state.selectedPersonId!!)
+                repository.addEntry(amount, state.selectedPersonId!!, state.selectedDateEpochDay)
             } else {
-                repository.addExpense(amount, state.selectedCategoryId!!, null)
+                repository.addExpense(amount, state.selectedCategoryId!!, null, state.selectedDateEpochDay)
             }
 
             result.onSuccess {
@@ -204,6 +211,8 @@ class HomeViewModel(
                             snackbarMessage = msg,
                         )
                     }
+                    // Reset the date back to today for the next record.
+                    selectDate(LocalDate.now().toEpochDay())
                 }
                 .onError {
                     _uiState.update {

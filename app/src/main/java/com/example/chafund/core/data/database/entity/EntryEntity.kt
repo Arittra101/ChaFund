@@ -31,4 +31,6 @@ data class EntryEntity(
     val time: String,      // "HH:mm"
     val createdAt: Long,
     val updatedAt: Long,
+    /** True for the "<previous month> entry" row created by the carry-last-month-balance action. */
+    val isCarryOver: Boolean = false,
 )

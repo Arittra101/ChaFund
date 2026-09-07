@@ -12,7 +12,9 @@ object DateTimeFormat {
     private val DAY_SHORT     = DateTimeFormatter.ofPattern("EEE",          Locale.ENGLISH)
     private val DAY_NAME      = DateTimeFormatter.ofPattern("EEEE",         Locale.ENGLISH)
     private val TIME_DISPLAY  = DateTimeFormatter.ofPattern("HH:mm",        Locale.ENGLISH)
+    private val TIME_12H      = DateTimeFormatter.ofPattern("h:mm a",       Locale.ENGLISH)
     private val MONTH_LABEL   = DateTimeFormatter.ofPattern("MMMM yyyy",    Locale.ENGLISH)
+    private val MONTH_NAME    = DateTimeFormatter.ofPattern("MMMM",         Locale.ENGLISH)
 
     /** "16 June 26" */
     fun formatDate(date: LocalDate): String = date.format(DATE_DISPLAY)
@@ -29,12 +31,20 @@ object DateTimeFormat {
     fun dayName(date: LocalDate): String  = date.format(DAY_NAME)
     fun dayName(epochDay: Long): String   = dayName(LocalDate.ofEpochDay(epochDay))
 
-    /** "14:30" */
+    /** "14:30" — the sortable 24h form used for storage */
     fun formatTime(time: LocalTime): String = time.format(TIME_DISPLAY)
+
+    /** Stored 24h "HH:mm" → "2:30 PM" for display; returns the input unchanged if unparseable. */
+    fun displayTime(stored: String): String =
+        runCatching { LocalTime.parse(stored).format(TIME_12H) }.getOrDefault(stored)
 
     /** "June 2026" */
     fun monthLabel(year: Int, month: Int): String =
         LocalDate.of(year, month, 1).format(MONTH_LABEL)
+
+    /** "June" — month name without the year */
+    fun monthName(year: Int, month: Int): String =
+        LocalDate.of(year, month, 1).format(MONTH_NAME)
 
     /** Current epoch-day */
     fun todayEpochDay(): Long = LocalDate.now().toEpochDay()

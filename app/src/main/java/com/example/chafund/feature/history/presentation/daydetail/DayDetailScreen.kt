@@ -41,6 +41,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import com.example.chafund.core.presentation.components.AmountField
 import com.example.chafund.core.presentation.components.CategoryChip
+import com.example.chafund.core.utils.DateTimeFormat
 import com.example.chafund.core.presentation.components.ConfirmationBottomSheet
 import com.example.chafund.core.presentation.components.EmptyView
 import com.example.chafund.core.presentation.components.MetricCard
@@ -250,7 +251,8 @@ private fun EntryRow(
                 color      = AppColors.EntryDeltaText,
             )
             val label = entry.displayLabel
-            val meta = if (!label.isNullOrBlank()) "$label · ${entry.time}" else entry.time
+            val time = DateTimeFormat.displayTime(entry.time)
+            val meta = if (!label.isNullOrBlank()) "$label · $time" else time
             Text(text = meta, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (!isReadOnly) {
@@ -283,7 +285,8 @@ private fun ExpenseGroupSection(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    val meta = if (!exp.ref.isNullOrBlank()) "${exp.ref} · ${exp.time}" else exp.time
+                    val expTime = DateTimeFormat.displayTime(exp.time)
+                    val meta = if (!exp.ref.isNullOrBlank()) "${exp.ref} · $expTime" else expTime
                     Text(text = meta, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Text(

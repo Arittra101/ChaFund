@@ -1,6 +1,7 @@
 package com.example.chafund.feature.fund.presentation.home
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -16,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,10 +35,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.time.LocalDate
 import com.example.chafund.core.presentation.components.AmountField
 import com.example.chafund.core.presentation.components.CalculatorBottomSheet
 import com.example.chafund.core.presentation.components.CategoryChip
@@ -147,6 +151,7 @@ private fun AddCard(
     onEvent: (HomeUiEvent) -> Unit,
 ) {
     var showCalculator by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(14.dp)
 
     if (showCalculator) {
@@ -157,6 +162,17 @@ private fun AddCard(
             },
             onDismiss = { showCalculator = false },
             initialValue = state.amountInput,
+        )
+    }
+
+    if (showDatePicker) {
+        EntryDatePicker(
+            initialEpochDay = state.selectedDateEpochDay,
+            onPick = {
+                onEvent(HomeUiEvent.OnDateSelected(it))
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false },
         )
     }
 
@@ -217,13 +233,45 @@ private fun AddCard(
                 )
             }
 
-            // Auto-track hint
-            if (state.todayHint.isNotEmpty()) {
-                Text(
-                    text = "🕐 ${state.todayHint}",
-                    fontSize = 10.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            // Date selector — defaults to today, can be pre-dated into next month
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(0.5.dp, AppColors.BorderLight, RoundedCornerShape(10.dp))
+                        .clickable { showDatePicker = true },
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = state.dateLabel,
+                            fontSize = 13.sp,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = "Change",
+                            fontSize = 11.sp,
+                            color = AppColors.BalanceTextLight,
+                        )
+                    }
+                }
+                if (state.dateHint.isNotEmpty()) {
+                    Text(
+                        text = "🕐 ${state.dateHint}",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
 
             // Save button
@@ -266,5 +314,65 @@ private fun CategorySection(
         if (error != null) {
             Text(text = error, color = MaterialTheme.colorScheme.error, fontSize = 11.sp)
         }
+    }
+}
+
+/**
+ * Date picker for a new entry/expense. Selectable range is today through the last day of next
+ * month, so a record can be filed under the current month or pre-dated into the next one.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EntryDatePicker(
+    initialEpochDay: Long,
+    onPick: (Long) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val today = LocalDate.now()
+    val nextMonth = today.plusMonths(1)
+    val minEpochDay = today.toEpochDay()
+    val maxEpochDay = nextMonth.withDayOfMonth(nextMonth.lengthOfMonth()).toEpochDay()
+    val dayMillis = 86_400_000L
+
+    val selectableDates = remember(minEpochDay, maxEpochDay) {
+        object : androidx.compose.material3.SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val epochDay = Math.floorDiv(utcTimeMillis, dayMillis)
+                return epochDay in minEpochDay..maxEpochDay
+            }
+            override fun isSelectableYear(year: Int): Boolean =
+                year == today.year || year == nextMonth.year
+        }
+    }
+
+    val initial = if (initialEpochDay in minEpochDay..maxEpochDay) initialEpochDay else minEpochDay
+    val pickerState = androidx.compose.material3.rememberDatePickerState(
+        initialSelectedDateMillis = initial * dayMillis,
+        initialDisplayedMonthMillis = initial * dayMillis,
+        selectableDates = selectableDates,
+    )
+
+    androidx.compose.material3.DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = { pickerState.selectedDateMillis?.let { onPick(Math.floorDiv(it, dayMillis)) } },
+                enabled = pickerState.selectedDateMillis != null,
+            ) { Text("Set") }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+    ) {
+        androidx.compose.material3.DatePicker(
+            state = pickerState,
+            title = {
+                Text(
+                    "Pick a date",
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(start = 24.dp, top = 16.dp),
+                )
+            },
+        )
     }
 }

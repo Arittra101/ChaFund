@@ -9,6 +9,7 @@ import com.example.chafund.feature.fund.domain.model.Month
 import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.fund.domain.model.TimeCategory
 import com.example.chafund.feature.history.domain.model.HistoryMonth
+import com.example.chafund.feature.settings.domain.CarryInfo
 import com.example.chafund.feature.settings.domain.SettingsRepository
 import com.example.chafund.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +27,8 @@ data class SettingsUiState(
     val groups: List<Group> = emptyList(),
     val people: List<Person> = emptyList(),
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    // Carry last month's balance
+    val carry: CarryInfo = CarryInfo(),
     // Delete month sheet
     val showDeleteMonthSheet: Boolean = false,
     val pendingDeleteMonthId: Long? = null,
@@ -92,6 +95,8 @@ sealed interface SettingsEvent {
     data object SavePerson : SettingsEvent
     data class DeletePerson(val id: Long) : SettingsEvent
 
+    data object CarryLastMonthBalance : SettingsEvent
+
     data class SetTheme(val mode: ThemeMode) : SettingsEvent
     data object SnackbarDismissed : SettingsEvent
 }
@@ -129,6 +134,8 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
                     people = data.people,
                     themeMode = theme,
                 )
+            }.combine(repository.observeCarryInfo()) { state, carry ->
+                state.copy(carry = carry)
             }.collect { _uiState.value = it }
         }
     }
@@ -258,8 +265,20 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
             SettingsEvent.SavePerson -> savePerson()
             is SettingsEvent.DeletePerson -> deletePerson(event.id)
 
+            SettingsEvent.CarryLastMonthBalance -> carryLastMonthBalance()
+
             is SettingsEvent.SetTheme -> viewModelScope.launch { repository.setTheme(event.mode) }
             SettingsEvent.SnackbarDismissed -> _uiState.update { it.copy(snackbarMessage = null) }
+        }
+    }
+
+    private fun carryLastMonthBalance() {
+        if (!_uiState.value.carry.canCarry) return
+        val monthName = _uiState.value.carry.previousMonthName
+        viewModelScope.launch {
+            repository.carryLastMonthBalance()
+                .onSuccess { _uiState.update { it.copy(snackbarMessage = "$monthName balance added") } }
+                .onError { _uiState.update { it.copy(snackbarMessage = "Could not add last month's balance") } }
         }
     }
 

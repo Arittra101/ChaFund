@@ -17,10 +17,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
@@ -127,6 +127,39 @@ fun SettingsScreen(
                     },
                     leadingContent = { Icon(Icons.Default.CalendarMonth, null) },
                     trailingContent = { LockIndicator() },
+                )
+                HorizontalDivider(thickness = 0.5.dp)
+                val carry = state.carry
+                ListItem(
+                    headlineContent = {
+                        Text("Bring last month's balance", fontSize = 14.sp, fontWeight = FontWeight.W500)
+                    },
+                    supportingContent = {
+                        Text(
+                            text = when {
+                                carry.alreadyCarried -> "Added to this month"
+                                !carry.hasPreviousMonth -> "No previous month yet"
+                                carry.canCarry ->
+                                    "Add ${carry.previousMonthName}'s balance · +${carry.previousBalance.formatTk()}"
+                                else -> "${carry.previousMonthName}'s balance is not positive"
+                            },
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                    leadingContent = { Icon(Icons.Default.ArrowDownward, null) },
+                    trailingContent = {
+                        if (carry.alreadyCarried) {
+                            Text("Done ✓", fontSize = 12.sp, color = AppColors.BalanceTextLight)
+                        } else {
+                            Icon(Icons.Default.ChevronRight, null)
+                        }
+                    },
+                    modifier = if (carry.canCarry) {
+                        Modifier.combinedClickable(onClick = { onEvent(SettingsEvent.CarryLastMonthBalance) })
+                    } else {
+                        Modifier
+                    },
                 )
                 HorizontalDivider(thickness = 0.5.dp)
                 ListItem(

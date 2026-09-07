@@ -50,6 +50,9 @@ interface EntryDao {
     @Query("SELECT IFNULL(SUM(amountPaisa), 0) FROM Entry WHERE monthId = :monthId")
     fun sumByMonth(monthId: Long): Flow<Long>
 
+    @Query("SELECT COUNT(*) FROM Entry WHERE monthId = :monthId AND isCarryOver = 1")
+    suspend fun countCarryOver(monthId: Long): Int
+
     @Insert
     suspend fun insert(entry: EntryEntity): Long
 

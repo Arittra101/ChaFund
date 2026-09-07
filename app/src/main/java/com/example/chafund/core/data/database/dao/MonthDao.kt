@@ -59,7 +59,8 @@ interface MonthDao {
             m.label        AS label,
             m.isCurrent    AS isCurrent,
             IFNULL((SELECT SUM(amountPaisa) FROM Entry   e WHERE e.monthId = m.id), 0) AS totalEntriesPaisa,
-            IFNULL((SELECT SUM(amountPaisa) FROM Expense x WHERE x.monthId = m.id), 0) AS totalSpentPaisa
+            IFNULL((SELECT SUM(amountPaisa) FROM Expense x WHERE x.monthId = m.id), 0) AS totalSpentPaisa,
+            EXISTS(SELECT 1 FROM Entry c WHERE c.monthId = m.id AND c.isCarryOver = 1) AS hasCarryOver
         FROM Month m
         ORDER BY m.year DESC, m.month DESC
     """)

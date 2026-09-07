@@ -2,6 +2,7 @@ package com.example.chafund.feature.settings.domain
 
 import com.example.chafund.core.domain.DataError
 import com.example.chafund.core.domain.Result
+import com.example.chafund.core.utils.Money
 import com.example.chafund.feature.history.domain.model.HistoryMonth
 import com.example.chafund.feature.fund.domain.model.Group
 import com.example.chafund.feature.fund.domain.model.Month
@@ -9,6 +10,19 @@ import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.fund.domain.model.TimeCategory
 import com.example.chafund.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.Flow
+
+/**
+ * State for the "bring last month's balance into the current month" action.
+ * [canCarry] is true only when there is a previous month, its balance is positive, and the
+ * current month hasn't already carried it in.
+ */
+data class CarryInfo(
+    val hasPreviousMonth: Boolean = false,
+    val previousMonthName: String = "",
+    val previousBalance: Money = Money.Zero,
+    val alreadyCarried: Boolean = false,
+    val canCarry: Boolean = false,
+)
 
 interface SettingsRepository {
     fun observeCurrentMonthLabel(): Flow<String>
@@ -18,6 +32,8 @@ interface SettingsRepository {
     fun observeGroups(): Flow<List<Group>>
     fun observePeople(): Flow<List<Person>>
     fun themeMode(): Flow<ThemeMode>
+    fun observeCarryInfo(): Flow<CarryInfo>
+    suspend fun carryLastMonthBalance(): Result<Unit, DataError.Local>
     suspend fun deletePastMonth(id: Long): Result<Unit, DataError.Local>
     suspend fun addCategory(name: String): Result<Unit, DataError.Local>
     suspend fun renameCategory(id: Long, name: String): Result<Unit, DataError.Local>

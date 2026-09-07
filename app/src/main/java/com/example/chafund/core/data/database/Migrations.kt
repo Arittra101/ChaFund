@@ -88,3 +88,13 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_Month_isCurrent` ON `Month` (`isCurrent`)")
     }
 }
+
+/**
+ * v4 -> v5: add Entry.isCarryOver to flag the opening "<previous month> entry" produced by the
+ * carry-last-month-balance action. Additive only — existing entries default to 0 (not a carry-over).
+ */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `Entry` ADD COLUMN `isCarryOver` INTEGER NOT NULL DEFAULT 0")
+    }
+}

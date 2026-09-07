@@ -7,6 +7,7 @@ sealed interface HomeUiEvent {
     data class OnPersonSelect(val id: Long) : HomeUiEvent
     data object OnPersonClear : HomeUiEvent
     data class OnCategorySelect(val id: Long) : HomeUiEvent
+    data class OnDateSelected(val epochDay: Long) : HomeUiEvent
     data object OnSave : HomeUiEvent
     data object OnSnackbarDismissed : HomeUiEvent
 }

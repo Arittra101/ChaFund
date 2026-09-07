@@ -28,7 +28,12 @@ data class HomeUiState(
     val categories: List<TimeCategory> = emptyList(),
     val selectedCategoryId: Long? = null,
     val categoryError: String? = null,
-    val todayHint: String = "",
+
+    // Date the record is filed under (defaults to today; may be pre-dated into next month)
+    val selectedDateEpochDay: Long = 0L,
+    val dateLabel: String = "",
+    val dateHint: String = "",
+
     val isSaving: Boolean = false,
     val saveEnabled: Boolean = false,
 

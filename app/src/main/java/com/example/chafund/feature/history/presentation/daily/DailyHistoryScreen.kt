@@ -226,7 +226,7 @@ private fun EntryListRow(entry: HistoryEntry) {
                 fontWeight = FontWeight.W500,
             )
             Text(
-                text = "${DateTimeFormat.formatDate(entry.date)} · ${entry.time}",
+                text = "${DateTimeFormat.formatDate(entry.date)} · ${DateTimeFormat.displayTime(entry.time)}",
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

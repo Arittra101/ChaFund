@@ -9,6 +9,7 @@ import com.example.chafund.core.data.database.dao.PersonDao
 import com.example.chafund.core.data.database.dao.TimeCategoryDao
 import com.example.chafund.core.data.database.entity.EntryEntity
 import com.example.chafund.core.data.database.entity.ExpenseEntity
+import com.example.chafund.core.data.database.entity.MonthEntity
 import com.example.chafund.core.data.session.Session
 import com.example.chafund.core.domain.DataError
 import com.example.chafund.core.domain.Result
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FundRepositoryImpl(
@@ -70,17 +72,17 @@ class FundRepositoryImpl(
     override suspend fun addEntry(
         amount: Money,
         personId: Long,
+        dateEpochDay: Long,
     ): Result<Unit, DataError.Local> = withContext(dispatchers.io) {
         try {
             val now = System.currentTimeMillis()
-            val monthId = session.currentMonthId.value
             entryDao.insert(
                 EntryEntity(
-                    monthId = monthId,
+                    monthId = resolveMonthId(dateEpochDay),
                     amountPaisa = amount.paisa,
                     ref = null,
                     personId = personId,
-                    date = DateTimeFormat.todayEpochDay(),
+                    date = dateEpochDay,
                     time = DateTimeFormat.nowTime(),
                     createdAt = now,
                     updatedAt = now,
@@ -96,17 +98,17 @@ class FundRepositoryImpl(
         amount: Money,
         categoryId: Long,
         ref: String?,
+        dateEpochDay: Long,
     ): Result<Unit, DataError.Local> = withContext(dispatchers.io) {
         try {
             val now = System.currentTimeMillis()
-            val monthId = session.currentMonthId.value
             expenseDao.insert(
                 ExpenseEntity(
-                    monthId = monthId,
+                    monthId = resolveMonthId(dateEpochDay),
                     timeCategoryId = categoryId,
                     amountPaisa = amount.paisa,
                     ref = ref?.takeIf { it.isNotBlank() },
-                    date = DateTimeFormat.todayEpochDay(),
+                    date = dateEpochDay,
                     time = DateTimeFormat.nowTime(),
                     createdAt = now,
                     updatedAt = now,
@@ -116,5 +118,28 @@ class FundRepositoryImpl(
         } catch (e: SQLiteException) {
             Result.Error(DataError.Local.UNKNOWN)
         }
+    }
+
+    /**
+     * Resolves the month a record dated [dateEpochDay] belongs to. Dates within the current
+     * calendar month map to the established current month; a date in a later calendar month
+     * (e.g. pre-dating into next month) upserts that month as a non-current month so its
+     * activity is tracked separately without disturbing the current month.
+     */
+    private suspend fun resolveMonthId(dateEpochDay: Long): Long {
+        val date = LocalDate.ofEpochDay(dateEpochDay)
+        val today = LocalDate.now()
+        if (date.year == today.year && date.monthValue == today.monthValue) {
+            return session.currentMonthId.value
+        }
+        return monthDao.upsertByYearMonth(
+            MonthEntity(
+                year = date.year,
+                month = date.monthValue,
+                label = DateTimeFormat.monthLabel(date.year, date.monthValue),
+                isCurrent = false,
+                createdAt = System.currentTimeMillis(),
+            )
+        )
     }
 }

@@ -14,6 +14,6 @@ interface FundRepository {
     fun observeCurrentMonthSummary(): Flow<MonthSummary>
     fun observeTimeCategories(): Flow<List<TimeCategory>>
     fun observePeople(): Flow<List<Person>>
-    suspend fun addEntry(amount: Money, personId: Long): Result<Unit, DataError.Local>
-    suspend fun addExpense(amount: Money, categoryId: Long, ref: String?): Result<Unit, DataError.Local>
+    suspend fun addEntry(amount: Money, personId: Long, dateEpochDay: Long): Result<Unit, DataError.Local>
+    suspend fun addExpense(amount: Money, categoryId: Long, ref: String?, dateEpochDay: Long): Result<Unit, DataError.Local>
 }
