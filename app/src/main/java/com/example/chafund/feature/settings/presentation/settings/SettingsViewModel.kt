@@ -11,7 +11,6 @@ import com.example.chafund.feature.fund.domain.model.TimeCategory
 import com.example.chafund.feature.history.domain.model.HistoryMonth
 import com.example.chafund.feature.settings.domain.CarryInfo
 import com.example.chafund.feature.settings.domain.SettingsRepository
-import com.example.chafund.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +25,6 @@ data class SettingsUiState(
     val categories: List<TimeCategory> = emptyList(),
     val groups: List<Group> = emptyList(),
     val people: List<Person> = emptyList(),
-    val themeMode: ThemeMode = ThemeMode.SYSTEM,
     // Carry last month's balance
     val carry: CarryInfo = CarryInfo(),
     // Delete month sheet
@@ -97,7 +95,6 @@ sealed interface SettingsEvent {
 
     data object CarryLastMonthBalance : SettingsEvent
 
-    data class SetTheme(val mode: ThemeMode) : SettingsEvent
     data object SnackbarDismissed : SettingsEvent
 }
 
@@ -124,7 +121,7 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
                 repository.observePeople(),
             ) { month, past, cats, groups, people ->
                 LoadedData(month, past, cats, groups, people)
-            }.combine(repository.themeMode()) { data, theme ->
+            }.combine(repository.observeCarryInfo()) { data, carry ->
                 _uiState.value.copy(
                     currentMonthLabel = data.month?.label ?: "",
                     currentMonth = data.month,
@@ -132,10 +129,8 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
                     categories = data.cats,
                     groups = data.groups,
                     people = data.people,
-                    themeMode = theme,
+                    carry = carry,
                 )
-            }.combine(repository.observeCarryInfo()) { state, carry ->
-                state.copy(carry = carry)
             }.collect { _uiState.value = it }
         }
     }
@@ -267,7 +262,6 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
             SettingsEvent.CarryLastMonthBalance -> carryLastMonthBalance()
 
-            is SettingsEvent.SetTheme -> viewModelScope.launch { repository.setTheme(event.mode) }
             SettingsEvent.SnackbarDismissed -> _uiState.update { it.copy(snackbarMessage = null) }
         }
     }

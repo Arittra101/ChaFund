@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
@@ -53,10 +52,8 @@ import com.example.chafund.core.presentation.components.CategoryChip
 import com.example.chafund.core.presentation.components.ConfirmationBottomSheet
 import com.example.chafund.core.presentation.components.LockIndicator
 import com.example.chafund.core.presentation.components.PrimaryButton
-import com.example.chafund.core.presentation.components.SegmentedToggle
 import com.example.chafund.feature.history.domain.model.HistoryMonth
 import com.example.chafund.ui.theme.AppColors
-import com.example.chafund.ui.theme.ThemeMode
 
 @Composable
 fun SettingsScreenRoot(
@@ -293,43 +290,6 @@ fun SettingsScreen(
                             )
                         }
                     }
-                }
-            }
-
-            // Card 3 — Theme
-            SettingsCard {
-                Column(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        Icon(Icons.Default.DarkMode, null)
-                        Text("Theme", fontSize = 14.sp, fontWeight = FontWeight.W500)
-                    }
-                    // Full-width so all three options fit on narrow screens.
-                    SegmentedToggle(
-                        options = listOf("Light", "Dark", "System"),
-                        selectedIndex = when (state.themeMode) {
-                            ThemeMode.LIGHT -> 0
-                            ThemeMode.DARK -> 1
-                            ThemeMode.SYSTEM -> 2
-                        },
-                        onSelect = { idx ->
-                            onEvent(
-                                SettingsEvent.SetTheme(
-                                    when (idx) {
-                                        0 -> ThemeMode.LIGHT
-                                        1 -> ThemeMode.DARK
-                                        else -> ThemeMode.SYSTEM
-                                    }
-                                )
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
                 }
             }
 

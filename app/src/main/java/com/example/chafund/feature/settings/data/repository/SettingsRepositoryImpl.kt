@@ -11,7 +11,6 @@ import com.example.chafund.core.data.database.entity.PersonEntity
 import com.example.chafund.core.data.database.entity.PersonGroupEntity
 import com.example.chafund.core.data.database.entity.TimeCategoryEntity
 import com.example.chafund.core.data.database.projection.MonthSummaryProjection
-import com.example.chafund.core.data.storage.LocalStorage
 import com.example.chafund.core.domain.DataError
 import com.example.chafund.core.domain.DispatcherProvider
 import com.example.chafund.core.domain.Result
@@ -26,7 +25,6 @@ import com.example.chafund.feature.history.data.mapper.toHistoryDomain
 import com.example.chafund.feature.history.domain.model.HistoryMonth
 import com.example.chafund.feature.settings.domain.CarryInfo
 import com.example.chafund.feature.settings.domain.SettingsRepository
-import com.example.chafund.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -40,7 +38,6 @@ class SettingsRepositoryImpl(
     private val entryDao: EntryDao,
     private val groupDao: PersonGroupDao,
     private val personDao: PersonDao,
-    private val localStorage: LocalStorage,
     private val dispatchers: DispatcherProvider,
 ) : SettingsRepository {
 
@@ -65,8 +62,6 @@ class SettingsRepositoryImpl(
 
     override fun observePeople(): Flow<List<Person>> =
         personDao.observeAllWithGroup().map { list -> list.map { it.toDomain() } }
-
-    override fun themeMode(): Flow<ThemeMode> = localStorage.themeMode
 
     override fun observeCarryInfo(): Flow<CarryInfo> =
         combine(monthDao.observeCurrent(), monthDao.observeMonthSummaries()) { current, summaries ->
@@ -231,6 +226,4 @@ class SettingsRepositoryImpl(
                 Result.Success(Unit)
             }.getOrElse { Result.Error(DataError.Local.UNKNOWN) }
         }
-
-    override suspend fun setTheme(mode: ThemeMode) = localStorage.setThemeMode(mode)
 }

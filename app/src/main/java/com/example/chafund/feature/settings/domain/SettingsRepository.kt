@@ -8,7 +8,6 @@ import com.example.chafund.feature.fund.domain.model.Group
 import com.example.chafund.feature.fund.domain.model.Month
 import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.fund.domain.model.TimeCategory
-import com.example.chafund.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -31,7 +30,6 @@ interface SettingsRepository {
     fun observeTimeCategories(): Flow<List<TimeCategory>>
     fun observeGroups(): Flow<List<Group>>
     fun observePeople(): Flow<List<Person>>
-    fun themeMode(): Flow<ThemeMode>
     fun observeCarryInfo(): Flow<CarryInfo>
     suspend fun carryLastMonthBalance(): Result<Unit, DataError.Local>
     suspend fun deletePastMonth(id: Long): Result<Unit, DataError.Local>
@@ -44,5 +42,4 @@ interface SettingsRepository {
     suspend fun addPerson(name: String, groupId: Long): Result<Unit, DataError.Local>
     suspend fun updatePerson(id: Long, name: String, groupId: Long): Result<Unit, DataError.Local>
     suspend fun deletePerson(id: Long): Result<Unit, DataError.Local>
-    suspend fun setTheme(mode: ThemeMode)
 }
