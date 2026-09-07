@@ -12,11 +12,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -42,6 +44,7 @@ import com.example.chafund.ui.theme.AppColors
 fun DailyHistoryScreenRoot(
     viewModel: DailyHistoryViewModel,
     onDayClick: (monthId: Long?, dateEpoch: Long) -> Unit,
+    onBack: () -> Unit,
     monthId: Long? = null,
     onOpenEntries: (Long) -> Unit = {},
 ) {
@@ -50,6 +53,7 @@ fun DailyHistoryScreenRoot(
         state = state,
         monthId = monthId,
         onDayClick = onDayClick,
+        onBack = onBack,
         onOpenEntries = onOpenEntries,
     )
 }
@@ -60,12 +64,18 @@ fun DailyHistoryScreen(
     state: DailyHistoryUiState,
     monthId: Long? = null,
     onDayClick: (monthId: Long?, dateEpoch: Long) -> Unit,
+    onBack: () -> Unit = {},
     onOpenEntries: (Long) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Daily history", fontSize = 15.sp, fontWeight = FontWeight.W500) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
                 actions = {
                     Surface(
                         shape = RoundedCornerShape(20.dp),

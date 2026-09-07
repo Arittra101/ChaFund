@@ -276,25 +276,26 @@ private fun ExpenseGroupSection(
     val chipColor = AppColors.chipColorFor(group.sortOrder - 1)
     Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
         CategoryChip(label = group.categoryName, chipColor = chipColor)
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(4.dp))
         group.expenses.forEachIndexed { index, exp ->
+            // Mirror EntryRow's anatomy: amount as headline + meta beneath, actions trailing.
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                    .padding(vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text       = Money(exp.amountPaisa).formatTk(),
+                        fontSize   = 14.sp,
+                        fontWeight = FontWeight.W500,
+                        color      = AppColors.SpentText,
+                    )
                     val expTime = DateTimeFormat.displayTime(exp.time)
                     val meta = if (!exp.ref.isNullOrBlank()) "${exp.ref} · $expTime" else expTime
-                    Text(text = meta, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(text = meta, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Text(
-                    text       = Money(exp.amountPaisa).formatTk(),
-                    fontSize   = 13.sp,
-                    fontWeight = FontWeight.W500,
-                    color      = AppColors.SpentText,
-                )
                 if (!isReadOnly) {
                     IconButton(onClick = { onEdit(exp) }) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit", tint = AppColors.BalanceTextLight)
@@ -305,7 +306,7 @@ private fun ExpenseGroupSection(
                 }
             }
             if (index < group.expenses.lastIndex) {
-                HorizontalDivider(thickness = 0.5.dp, modifier = Modifier.padding(vertical = 2.dp))
+                HorizontalDivider(thickness = 0.5.dp)
             }
         }
     }

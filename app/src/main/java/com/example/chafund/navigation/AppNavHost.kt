@@ -75,6 +75,7 @@ fun AppNavHost(navigator: Navigator) {
                     viewModel = koinViewModel<DailyHistoryViewModel>(),
                     monthId = route.monthId,
                     onDayClick = { monthId, date -> navController.navigate(Route.DayDetail(monthId, date)) },
+                    onBack = { navController.popBackStack() },
                     onOpenEntries = { monthId -> navController.navigate(Route.MonthEntries(monthId)) },
                 )
             }
