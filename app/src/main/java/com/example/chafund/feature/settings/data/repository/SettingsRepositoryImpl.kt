@@ -162,21 +162,5 @@ class SettingsRepositoryImpl(
             }.getOrElse { Result.Error(DataError.Local.UNKNOWN) }
         }
 
-    override suspend fun setCycleStart(monthId: Long, epochDay: Long): Result<Unit, DataError.Local> =
-        withContext(dispatchers.io) {
-            runCatching {
-                monthDao.setCycleStart(monthId, epochDay)
-                Result.Success(Unit)
-            }.getOrElse { Result.Error(DataError.Local.UNKNOWN) }
-        }
-
-    override suspend fun clearCycleStart(monthId: Long): Result<Unit, DataError.Local> =
-        withContext(dispatchers.io) {
-            runCatching {
-                monthDao.clearCycleStart(monthId)
-                Result.Success(Unit)
-            }.getOrElse { Result.Error(DataError.Local.UNKNOWN) }
-        }
-
     override suspend fun setTheme(mode: ThemeMode) = localStorage.setThemeMode(mode)
 }

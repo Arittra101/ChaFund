@@ -8,8 +8,6 @@ data class Month(
     val month: Int,
     val label: String,
     val isCurrent: Boolean,
-    val cycleStartEpochDay: Long? = null,
-    val includePrevTail: Boolean = false,
 )
 
 data class TimeCategory(

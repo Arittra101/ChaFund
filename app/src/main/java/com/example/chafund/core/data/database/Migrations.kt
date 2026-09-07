@@ -55,3 +55,36 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("ALTER TABLE `Month` ADD COLUMN `includePrevTail` INTEGER NOT NULL DEFAULT 0")
     }
 }
+
+/**
+ * v3 -> v4: drop the custom cycle-start feature. Recreate the Month table without the
+ * `cycleStartEpochDay` / `includePrevTail` columns; all existing month rows are preserved.
+ * Table recreation is used (rather than DROP COLUMN) for compatibility with the older SQLite
+ * engines bundled on some Android versions.
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `Month_new` (
+                `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                `year` INTEGER NOT NULL,
+                `month` INTEGER NOT NULL,
+                `label` TEXT NOT NULL,
+                `isCurrent` INTEGER NOT NULL,
+                `createdAt` INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            """
+            INSERT INTO `Month_new` (`id`, `year`, `month`, `label`, `isCurrent`, `createdAt`)
+            SELECT `id`, `year`, `month`, `label`, `isCurrent`, `createdAt` FROM `Month`
+            """.trimIndent()
+        )
+        db.execSQL("DROP TABLE `Month`")
+        db.execSQL("ALTER TABLE `Month_new` RENAME TO `Month`")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_Month_year_month` ON `Month` (`year`, `month`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_Month_isCurrent` ON `Month` (`isCurrent`)")
+    }
+}

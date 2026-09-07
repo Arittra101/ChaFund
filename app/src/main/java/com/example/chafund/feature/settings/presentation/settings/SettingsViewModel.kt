@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chafund.core.domain.onError
 import com.example.chafund.core.domain.onSuccess
-import com.example.chafund.core.utils.MonthWindow
 import com.example.chafund.feature.fund.domain.model.Group
 import com.example.chafund.feature.fund.domain.model.Month
 import com.example.chafund.feature.fund.domain.model.Person
@@ -22,7 +21,6 @@ import kotlinx.coroutines.launch
 data class SettingsUiState(
     val currentMonthLabel: String = "",
     val currentMonth: Month? = null,
-    val showCyclePicker: Boolean = false,
     val pastMonths: List<HistoryMonth> = emptyList(),
     val categories: List<TimeCategory> = emptyList(),
     val groups: List<Group> = emptyList(),
@@ -93,12 +91,6 @@ sealed interface SettingsEvent {
     data class OnPersonGroupSelect(val id: Long) : SettingsEvent
     data object SavePerson : SettingsEvent
     data class DeletePerson(val id: Long) : SettingsEvent
-
-    // Cycle start (previous-month tail)
-    data object ShowCyclePicker : SettingsEvent
-    data object HideCyclePicker : SettingsEvent
-    data class SetCycleStart(val epochDay: Long) : SettingsEvent
-    data object ClearCycleStart : SettingsEvent
 
     data class SetTheme(val mode: ThemeMode) : SettingsEvent
     data object SnackbarDismissed : SettingsEvent
@@ -266,31 +258,8 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
             SettingsEvent.SavePerson -> savePerson()
             is SettingsEvent.DeletePerson -> deletePerson(event.id)
 
-            SettingsEvent.ShowCyclePicker -> _uiState.update { it.copy(showCyclePicker = true) }
-            SettingsEvent.HideCyclePicker -> _uiState.update { it.copy(showCyclePicker = false) }
-            is SettingsEvent.SetCycleStart -> setCycleStart(event.epochDay)
-            SettingsEvent.ClearCycleStart -> clearCycleStart()
-
             is SettingsEvent.SetTheme -> viewModelScope.launch { repository.setTheme(event.mode) }
             SettingsEvent.SnackbarDismissed -> _uiState.update { it.copy(snackbarMessage = null) }
-        }
-    }
-
-    private fun setCycleStart(epochDay: Long) {
-        val monthId = _uiState.value.currentMonth?.id ?: return
-        viewModelScope.launch {
-            repository.setCycleStart(monthId, epochDay)
-                .onSuccess { _uiState.update { it.copy(showCyclePicker = false, snackbarMessage = "Cycle start set") } }
-                .onError   { _uiState.update { it.copy(showCyclePicker = false, snackbarMessage = "Could not set cycle start") } }
-        }
-    }
-
-    private fun clearCycleStart() {
-        val monthId = _uiState.value.currentMonth?.id ?: return
-        viewModelScope.launch {
-            repository.clearCycleStart(monthId)
-                .onSuccess { _uiState.update { it.copy(showCyclePicker = false, snackbarMessage = "Cycle start cleared") } }
-                .onError   { _uiState.update { it.copy(showCyclePicker = false, snackbarMessage = "Could not clear cycle start") } }
         }
     }
 

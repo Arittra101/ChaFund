@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.chafund.core.data.session.Session
 import com.example.chafund.core.utils.Money
-import com.example.chafund.core.utils.MonthWindow
 import com.example.chafund.feature.history.domain.HistoryRepository
 import com.example.chafund.feature.history.domain.model.HistoryEntry
 import com.example.chafund.navigation.Route
@@ -49,13 +48,8 @@ class MonthEntriesViewModel(
                 repository.observeMonthSummaries().flatMapLatest { months ->
                     val monthId = rawId ?: session.currentMonthId.value
                     val month = months.find { it.id == monthId }
-                    val tailStart = MonthWindow.tailStart(
-                        month?.cycleStartEpochDay,
-                        month?.includePrevTail ?: false,
-                    )
-                    val tailEnd = month?.let { it.monthFirstEpochDay - 1 } ?: 0L
 
-                    repository.observeEntriesForMonth(monthId, tailStart, tailEnd).map { entries ->
+                    repository.observeEntriesForMonth(monthId).map { entries ->
                         MonthEntriesUiState(
                             monthLabel = month?.label ?: "",
                             entries = entries,

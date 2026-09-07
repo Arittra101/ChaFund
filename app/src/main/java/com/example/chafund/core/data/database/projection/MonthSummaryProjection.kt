@@ -8,6 +8,4 @@ data class MonthSummaryProjection(
     val isCurrent: Boolean,
     val totalEntriesPaisa: Long,
     val totalSpentPaisa: Long,
-    val cycleStartEpochDay: Long?,
-    val includePrevTail: Boolean,
 )

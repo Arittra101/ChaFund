@@ -33,11 +33,11 @@ class HistoryRepositoryImpl(
     override fun observeMonthSummaries(): Flow<List<HistoryMonth>> =
         monthDao.observeMonthSummaries().map { list -> list.map { it.toHistoryDomain() } }
 
-    override fun observeDailySummaries(monthId: Long, tailStart: Long?, tailEnd: Long): Flow<List<DailySummary>> =
-        historyDao.observeDailySummariesWithTail(monthId, tailStart, tailEnd).map { list -> list.map { it.toDomain() } }
+    override fun observeDailySummaries(monthId: Long): Flow<List<DailySummary>> =
+        historyDao.observeDailySummaries(monthId).map { list -> list.map { it.toDomain() } }
 
-    override fun observeEntriesForMonth(monthId: Long, tailStart: Long?, tailEnd: Long): Flow<List<HistoryEntry>> =
-        entryDao.observeByMonthWithPerson(monthId, tailStart, tailEnd).map { list -> list.map { it.toHistoryDomain() } }
+    override fun observeEntriesForMonth(monthId: Long): Flow<List<HistoryEntry>> =
+        entryDao.observeByMonthWithPerson(monthId).map { list -> list.map { it.toHistoryDomain() } }
 
     override fun observeEntriesForDay(date: Long): Flow<List<HistoryEntry>> =
         entryDao.observeByDateWithPerson(date).map { list -> list.map { it.toHistoryDomain() } }
@@ -58,14 +58,6 @@ class HistoryRepositoryImpl(
                     )
                 }
                 .sortedBy { it.sortOrder }
-        }
-
-    override suspend fun setIncludePrevTail(monthId: Long, include: Boolean): Result<Unit, DataError.Local> =
-        withContext(dispatchers.io) {
-            runCatching {
-                monthDao.setIncludePrevTail(monthId, include)
-                Result.Success(Unit)
-            }.getOrElse { Result.Error(DataError.Local.UNKNOWN) }
         }
 
     override suspend fun updateEntry(

@@ -15,7 +15,6 @@ import com.example.chafund.core.domain.Result
 import com.example.chafund.core.domain.DispatcherProvider
 import com.example.chafund.core.utils.DateTimeFormat
 import com.example.chafund.core.utils.Money
-import com.example.chafund.core.utils.MonthWindow
 import com.example.chafund.feature.fund.data.mapper.toDomain
 import com.example.chafund.feature.fund.domain.FundRepository
 import com.example.chafund.feature.fund.domain.model.Month
@@ -48,11 +47,9 @@ class FundRepositoryImpl(
             if (month == null) {
                 flowOf(MonthSummary.empty())
             } else {
-                val tailStart = MonthWindow.tailStart(month.cycleStartEpochDay, month.includePrevTail)
-                val tailEnd = MonthWindow.tailEndFor(month.year, month.month)
                 combine(
-                    entryDao.sumByMonthWithTail(month.id, tailStart, tailEnd),
-                    expenseDao.sumByMonthWithTail(month.id, tailStart, tailEnd),
+                    entryDao.sumByMonth(month.id),
+                    expenseDao.sumByMonth(month.id),
                 ) { entrySum, expenseSum ->
                     MonthSummary(
                         monthId = month.id,

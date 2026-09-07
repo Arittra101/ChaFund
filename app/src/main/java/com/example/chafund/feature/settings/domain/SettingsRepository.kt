@@ -28,7 +28,5 @@ interface SettingsRepository {
     suspend fun addPerson(name: String, groupId: Long): Result<Unit, DataError.Local>
     suspend fun updatePerson(id: Long, name: String, groupId: Long): Result<Unit, DataError.Local>
     suspend fun deletePerson(id: Long): Result<Unit, DataError.Local>
-    suspend fun setCycleStart(monthId: Long, epochDay: Long): Result<Unit, DataError.Local>
-    suspend fun clearCycleStart(monthId: Long): Result<Unit, DataError.Local>
     suspend fun setTheme(mode: ThemeMode)
 }

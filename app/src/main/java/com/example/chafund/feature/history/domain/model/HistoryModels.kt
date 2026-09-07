@@ -53,7 +53,4 @@ data class HistoryMonth(
     val totalEntries: Money,
     val totalSpent: Money,
     val balance: Money,
-    val cycleStartEpochDay: Long? = null,
-    val includePrevTail: Boolean = false,
-    val monthFirstEpochDay: Long = 0L,
 )

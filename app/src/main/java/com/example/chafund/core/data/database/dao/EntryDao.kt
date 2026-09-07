@@ -31,7 +31,7 @@ interface EntryDao {
     )
     fun observeByDateWithPerson(date: Long): Flow<List<EntryWithPersonProjection>>
 
-    // All entries for a month, tail-aware, with person + group for display.
+    // All entries for a month, with person + group for display.
     @Query(
         """
         SELECT e.*, p.name AS personName, g.name AS groupName
@@ -39,24 +39,16 @@ interface EntryDao {
         LEFT JOIN Person p ON p.id = e.personId
         LEFT JOIN PersonGroup g ON g.id = p.groupId
         WHERE e.monthId = :monthId
-           OR (:tailStart IS NOT NULL AND e.date BETWEEN :tailStart AND :tailEnd)
         ORDER BY e.date DESC, e.time DESC, e.id DESC
         """
     )
-    fun observeByMonthWithPerson(monthId: Long, tailStart: Long?, tailEnd: Long): Flow<List<EntryWithPersonProjection>>
+    fun observeByMonthWithPerson(monthId: Long): Flow<List<EntryWithPersonProjection>>
 
     @Query("SELECT * FROM Entry WHERE id = :id LIMIT 1")
     suspend fun findById(id: Long): EntryEntity?
 
     @Query("SELECT IFNULL(SUM(amountPaisa), 0) FROM Entry WHERE monthId = :monthId")
     fun sumByMonth(monthId: Long): Flow<Long>
-
-    @Query("""
-        SELECT IFNULL(SUM(amountPaisa), 0) FROM Entry
-        WHERE monthId = :monthId
-           OR (:tailStart IS NOT NULL AND date BETWEEN :tailStart AND :tailEnd)
-    """)
-    fun sumByMonthWithTail(monthId: Long, tailStart: Long?, tailEnd: Long): Flow<Long>
 
     @Insert
     suspend fun insert(entry: EntryEntity): Long

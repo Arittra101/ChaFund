@@ -31,13 +31,6 @@ interface ExpenseDao {
     @Query("SELECT IFNULL(SUM(amountPaisa), 0) FROM Expense WHERE monthId = :monthId")
     fun sumByMonth(monthId: Long): Flow<Long>
 
-    @Query("""
-        SELECT IFNULL(SUM(amountPaisa), 0) FROM Expense
-        WHERE monthId = :monthId
-           OR (:tailStart IS NOT NULL AND date BETWEEN :tailStart AND :tailEnd)
-    """)
-    fun sumByMonthWithTail(monthId: Long, tailStart: Long?, tailEnd: Long): Flow<Long>
-
     @Query("SELECT COUNT(*) FROM Expense WHERE timeCategoryId = :categoryId")
     suspend fun countByCategory(categoryId: Long): Int
 

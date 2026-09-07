@@ -5,10 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.chafund.core.data.session.Session
-import com.example.chafund.core.domain.onSuccess
-import com.example.chafund.core.utils.DateTimeFormat
 import com.example.chafund.core.utils.Money
-import com.example.chafund.core.utils.MonthWindow
 import com.example.chafund.feature.history.domain.HistoryRepository
 import com.example.chafund.feature.history.domain.model.DailySummary
 import com.example.chafund.feature.history.domain.model.HistoryEntry
@@ -30,11 +27,7 @@ data class DailyHistoryUiState(
     val balance: Money = Money.Zero,
     val days: List<DailySummary> = emptyList(),
     val isLoading: Boolean = true,
-    // Cycle (previous-month tail) toggle
-    val showCycleToggle: Boolean = false,
-    val includePrevTail: Boolean = false,
-    val cycleToggleLabel: String = "",
-    // Entries list for the month (tail-aware)
+    // Entries list for the month
     val entries: List<HistoryEntry> = emptyList(),
     val entriesTotal: Money = Money.Zero,
 )
@@ -63,15 +56,10 @@ class DailyHistoryViewModel(
                 repository.observeMonthSummaries().flatMapLatest { months ->
                     val monthId = rawId ?: session.currentMonthId.value
                     val month = months.find { it.id == monthId }
-                    val tailStart = MonthWindow.tailStart(
-                        month?.cycleStartEpochDay,
-                        month?.includePrevTail ?: false,
-                    )
-                    val tailEnd = month?.let { it.monthFirstEpochDay - 1 } ?: 0L
 
                     combine(
-                        repository.observeDailySummaries(monthId, tailStart, tailEnd),
-                        repository.observeEntriesForMonth(monthId, tailStart, tailEnd),
+                        repository.observeDailySummaries(monthId),
+                        repository.observeEntriesForMonth(monthId),
                         session.currentMonthId,
                     ) { days, entries, currentId ->
                         DailyHistoryUiState(
@@ -82,9 +70,6 @@ class DailyHistoryViewModel(
                             balance = month?.balance ?: Money.Zero,
                             days = days,
                             isLoading = false,
-                            showCycleToggle = month?.cycleStartEpochDay != null,
-                            includePrevTail = month?.includePrevTail ?: false,
-                            cycleToggleLabel = cycleToggleLabel(month?.cycleStartEpochDay, tailEndOf(month)),
                             entries = entries,
                             entriesTotal = Money(entries.sumOf { it.amountPaisa }),
                         )
@@ -92,19 +77,5 @@ class DailyHistoryViewModel(
                 }
             }.collect { _uiState.value = it }
         }
-    }
-
-    fun onToggleIncludePrevTail(include: Boolean) {
-        val id = _uiState.value.monthId
-        if (id == 0L) return
-        viewModelScope.launch { repository.setIncludePrevTail(id, include).onSuccess { } }
-    }
-
-    private fun tailEndOf(month: com.example.chafund.feature.history.domain.model.HistoryMonth?): Long =
-        month?.let { it.monthFirstEpochDay - 1 } ?: 0L
-
-    private fun cycleToggleLabel(cycleStart: Long?, tailEnd: Long): String {
-        if (cycleStart == null) return ""
-        return "Include ${DateTimeFormat.formatDateShort(cycleStart)} – ${DateTimeFormat.formatDateShort(tailEnd)}"
     }
 }

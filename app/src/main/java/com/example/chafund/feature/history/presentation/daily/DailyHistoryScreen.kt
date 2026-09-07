@@ -50,7 +50,6 @@ fun DailyHistoryScreenRoot(
         state = state,
         monthId = monthId,
         onDayClick = onDayClick,
-        onToggleCycle = viewModel::onToggleIncludePrevTail,
         onOpenEntries = onOpenEntries,
     )
 }
@@ -61,7 +60,6 @@ fun DailyHistoryScreen(
     state: DailyHistoryUiState,
     monthId: Long? = null,
     onDayClick: (monthId: Long?, dateEpoch: Long) -> Unit,
-    onToggleCycle: (Boolean) -> Unit = {},
     onOpenEntries: (Long) -> Unit = {},
 ) {
     Scaffold(
@@ -119,40 +117,7 @@ fun DailyHistoryScreen(
                 }
             }
 
-            // Cycle (previous-month tail) toggle
-            if (state.showCycleToggle) {
-                item {
-                    val shape = RoundedCornerShape(14.dp)
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(0.5.dp, AppColors.BorderLight, shape),
-                        shape = shape,
-                        color = MaterialTheme.colorScheme.surface,
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(enabled = !state.isReadOnly) { onToggleCycle(!state.includePrevTail) }
-                                .padding(start = 14.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = state.cycleToggleLabel,
-                                fontSize = 13.sp,
-                                modifier = Modifier.weight(1f),
-                            )
-                            Checkbox(
-                                checked = state.includePrevTail,
-                                onCheckedChange = { onToggleCycle(it) },
-                                enabled = !state.isReadOnly,
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Entries card (person name · date · time · amount) with tail-aware total — preview, opens full list
+            // Entries card (person name · date · time · amount) with total — preview, opens full list
             item { EntriesCard(state = state, onOpen = { onOpenEntries(state.monthId) }) }
 
             // Date list

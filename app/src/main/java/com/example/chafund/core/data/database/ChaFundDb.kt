@@ -25,7 +25,7 @@ import com.example.chafund.core.data.database.entity.TimeCategoryEntity
         PersonGroupEntity::class,
         PersonEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class ChaFundDb : RoomDatabase() {

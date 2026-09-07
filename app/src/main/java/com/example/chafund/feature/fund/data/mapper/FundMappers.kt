@@ -18,8 +18,6 @@ fun MonthEntity.toDomain() = Month(
     month     = month,
     label     = label,
     isCurrent = isCurrent,
-    cycleStartEpochDay = cycleStartEpochDay,
-    includePrevTail    = includePrevTail,
 )
 
 fun TimeCategoryEntity.toDomain() = TimeCategory(

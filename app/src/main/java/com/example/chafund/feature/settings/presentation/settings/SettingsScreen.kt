@@ -129,32 +129,6 @@ fun SettingsScreen(
                     trailingContent = { LockIndicator() },
                 )
                 HorizontalDivider(thickness = 0.5.dp)
-                val cycleStart = state.currentMonth?.cycleStartEpochDay
-                ListItem(
-                    headlineContent = { Text("Cycle start", fontSize = 14.sp, fontWeight = FontWeight.W500) },
-                    supportingContent = {
-                        Text(
-                            text = if (cycleStart != null)
-                                "Includes from ${com.example.chafund.core.utils.DateTimeFormat.formatDateShort(cycleStart)}"
-                            else
-                                "Default · starts on the 1st",
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
-                    leadingContent = { Icon(Icons.Default.DateRange, null) },
-                    trailingContent = {
-                        if (cycleStart != null) {
-                            androidx.compose.material3.TextButton(onClick = { onEvent(SettingsEvent.ClearCycleStart) }) {
-                                Text("Clear", fontSize = 12.sp)
-                            }
-                        } else {
-                            Icon(Icons.Default.ChevronRight, null)
-                        }
-                    },
-                    modifier = Modifier.combinedClickable(onClick = { onEvent(SettingsEvent.ShowCyclePicker) }),
-                )
-                HorizontalDivider(thickness = 0.5.dp)
                 ListItem(
                     headlineContent = {
                         Text(
@@ -442,72 +416,6 @@ fun SettingsScreen(
         }
     }
 
-    // Cycle start date picker (previous calendar month only)
-    if (state.showCyclePicker && state.currentMonth != null) {
-        CycleStartDatePicker(
-            year = state.currentMonth.year,
-            month = state.currentMonth.month,
-            initialEpochDay = state.currentMonth.cycleStartEpochDay,
-            onPick = { onEvent(SettingsEvent.SetCycleStart(it)) },
-            onDismiss = { onEvent(SettingsEvent.HideCyclePicker) },
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CycleStartDatePicker(
-    year: Int,
-    month: Int,
-    initialEpochDay: Long?,
-    onPick: (Long) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val prevMonthFirst = java.time.LocalDate.of(year, month, 1).minusMonths(1)
-    val prevMonthLast = prevMonthFirst.withDayOfMonth(prevMonthFirst.lengthOfMonth())
-    val prevFirstEpochDay = prevMonthFirst.toEpochDay()
-    val prevLastEpochDay = prevMonthLast.toEpochDay()
-    val dayMillis = 86_400_000L
-
-    val selectableDates = remember(prevFirstEpochDay, prevLastEpochDay) {
-        object : androidx.compose.material3.SelectableDates {
-            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                val epochDay = Math.floorDiv(utcTimeMillis, dayMillis)
-                return epochDay in prevFirstEpochDay..prevLastEpochDay
-            }
-            override fun isSelectableYear(year: Int): Boolean = year == prevMonthFirst.year
-        }
-    }
-
-    val pickerState = androidx.compose.material3.rememberDatePickerState(
-        initialSelectedDateMillis = (initialEpochDay ?: prevFirstEpochDay) * dayMillis,
-        initialDisplayedMonthMillis = prevFirstEpochDay * dayMillis,
-        selectableDates = selectableDates,
-    )
-
-    androidx.compose.material3.DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            androidx.compose.material3.TextButton(
-                onClick = { pickerState.selectedDateMillis?.let { onPick(Math.floorDiv(it, dayMillis)) } },
-                enabled = pickerState.selectedDateMillis != null,
-            ) { Text("Set") }
-        },
-        dismissButton = {
-            androidx.compose.material3.TextButton(onClick = onDismiss) { Text("Cancel") }
-        },
-    ) {
-        androidx.compose.material3.DatePicker(
-            state = pickerState,
-            title = {
-                Text(
-                    "Cycle start — ${com.example.chafund.core.utils.DateTimeFormat.monthLabel(prevMonthFirst.year, prevMonthFirst.monthValue)}",
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(start = 24.dp, top = 16.dp),
-                )
-            },
-        )
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

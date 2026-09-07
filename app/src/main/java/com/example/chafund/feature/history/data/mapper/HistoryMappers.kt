@@ -64,7 +64,4 @@ fun MonthSummaryProjection.toHistoryDomain() = HistoryMonth(
     totalEntries = Money(totalEntriesPaisa),
     totalSpent = Money(totalSpentPaisa),
     balance = Money(totalEntriesPaisa - totalSpentPaisa),
-    cycleStartEpochDay = cycleStartEpochDay,
-    includePrevTail = includePrevTail,
-    monthFirstEpochDay = com.example.chafund.core.utils.MonthWindow.firstOfMonthEpochDay(year, month),
 )
