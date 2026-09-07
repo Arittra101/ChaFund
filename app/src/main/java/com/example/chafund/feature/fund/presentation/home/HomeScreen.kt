@@ -12,13 +12,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.EventNote
 import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -88,16 +90,35 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { LockedMonthBadge(monthLabel = state.monthLabel) },
-                actions = {
-                    IconButton(onClick = onNavigateToDailyHistory) {
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = "View daily history",
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                        LockedMonthBadge(monthLabel = state.monthLabel)
                     }
-                    LockIndicator(modifier = Modifier.padding(end = 16.dp))
+                },
+                actions = {
+                    Row(
+                        modifier = Modifier.padding(end = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        LockIndicator()
+                        IconButton(onClick = onNavigateToDailyHistory) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.EventNote,
+                                contentDescription = "View daily history",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                 },
             )
         },

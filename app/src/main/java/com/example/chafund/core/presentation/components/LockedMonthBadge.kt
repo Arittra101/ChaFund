@@ -23,13 +23,15 @@ fun LockedMonthBadge(
 ) {
     Column(modifier = modifier) {
         Text(
-            text     = "Current month",
-            fontSize = 10.sp,
-            color    = MaterialTheme.colorScheme.onSurfaceVariant,
+            text       = "Current month",
+            fontSize   = 10.sp,
+            lineHeight = 12.sp,
+            color      = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
             text       = monthLabel,
             fontSize   = 15.sp,
+            lineHeight = 18.sp,
             fontWeight = FontWeight.W500,
             color      = MaterialTheme.colorScheme.onSurface,
         )
@@ -41,7 +43,7 @@ fun LockIndicator(modifier: Modifier = Modifier) {
     Row(
         modifier  = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         Icon(
             imageVector = Icons.Default.Lock,
@@ -50,9 +52,10 @@ fun LockIndicator(modifier: Modifier = Modifier) {
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
-            text     = "auto",
-            fontSize = 11.sp,
-            color    = MaterialTheme.colorScheme.onSurfaceVariant,
+            text       = "auto",
+            fontSize   = 11.sp,
+            lineHeight = 11.sp,
+            color      = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
