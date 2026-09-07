@@ -43,7 +43,9 @@ fun SegmentedToggle(
                 modifier = Modifier
                     .weight(1f)
                     .clip(pillShape)
-                    .background(if (selected) Color.White else Color.Transparent)
+                    // Theme-aware selected pill: light surface in light mode, dark surface in
+                    // dark mode, so the (onSurface) label always stays readable on it.
+                    .background(if (selected) MaterialTheme.colorScheme.surface else Color.Transparent)
                     .clickable { onSelect(index) }
                     .padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center,

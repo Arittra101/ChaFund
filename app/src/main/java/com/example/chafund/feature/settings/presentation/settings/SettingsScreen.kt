@@ -298,40 +298,39 @@ fun SettingsScreen(
 
             // Card 3 — Theme
             SettingsCard {
-                ListItem(
-                    headlineContent = {
-                        Text(
-                            "Theme",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.W500
-                        )
-                    },
-                    leadingContent = { Icon(Icons.Default.DarkMode, null) },
-                    trailingContent = {
-                        SegmentedToggle(
-                            options = listOf("Light", "Dark", "System"),
-                            selectedIndex = when (state.themeMode) {
-                                ThemeMode.LIGHT -> 0
-                                ThemeMode.DARK -> 1
-                                ThemeMode.SYSTEM -> 2
-                            },
-                            onSelect = { idx ->
-                                onEvent(
-                                    SettingsEvent.SetTheme(
-                                        when (idx) {
-                                            0 -> ThemeMode.LIGHT
-                                            1 -> ThemeMode.DARK
-                                            else -> ThemeMode.SYSTEM
-                                        }
-                                    )
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Icon(Icons.Default.DarkMode, null)
+                        Text("Theme", fontSize = 14.sp, fontWeight = FontWeight.W500)
+                    }
+                    // Full-width so all three options fit on narrow screens.
+                    SegmentedToggle(
+                        options = listOf("Light", "Dark", "System"),
+                        selectedIndex = when (state.themeMode) {
+                            ThemeMode.LIGHT -> 0
+                            ThemeMode.DARK -> 1
+                            ThemeMode.SYSTEM -> 2
+                        },
+                        onSelect = { idx ->
+                            onEvent(
+                                SettingsEvent.SetTheme(
+                                    when (idx) {
+                                        0 -> ThemeMode.LIGHT
+                                        1 -> ThemeMode.DARK
+                                        else -> ThemeMode.SYSTEM
+                                    }
                                 )
-                            },
-                            modifier = Modifier
-                                .padding(end = 0.dp)
-                                .fillMaxWidth(0.55f),
-                        )
-                    },
-                )
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
 
             // Footnote
