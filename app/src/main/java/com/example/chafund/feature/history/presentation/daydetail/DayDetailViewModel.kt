@@ -9,6 +9,7 @@ import com.example.chafund.core.domain.onSuccess
 import com.example.chafund.core.utils.Money
 import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.history.domain.HistoryRepository
+import com.example.chafund.feature.history.domain.model.AmountBreakdown
 import com.example.chafund.feature.history.domain.model.ExpenseGrouped
 import com.example.chafund.feature.history.domain.model.HistoryEntry
 import com.example.chafund.feature.history.domain.model.HistoryExpense
@@ -30,6 +31,8 @@ data class DayDetailUiState(
     val groups: List<ExpenseGrouped> = emptyList(),
     val totalSpent: Money = Money.Zero,
     val people: List<Person> = emptyList(),
+    // Money split by payment method for this day
+    val breakdown: AmountBreakdown = AmountBreakdown.Empty,
     // Edit state
     val editingEntry: HistoryEntry? = null,
     val editingExpense: HistoryExpense? = null,
@@ -86,7 +89,8 @@ class DayDetailViewModel(
                 repository.observeEntriesForDay(date),
                 repository.observeExpensesForDay(date),
                 repository.observePeople(),
-            ) { entries, groups, people ->
+                repository.observeBreakdownForDay(date),
+            ) { entries, groups, people, breakdown ->
                 val totalSpent =
                     groups.flatMap { it.expenses }.sumOf { it.amountPaisa }.let { Money(it) }
                 val dateLabel = com.example.chafund.core.utils.DateTimeFormat.formatDate(date)
@@ -98,6 +102,7 @@ class DayDetailViewModel(
                     groups = groups,
                     totalSpent = totalSpent,
                     people = people,
+                    breakdown = breakdown,
                 )
             }.collect { _uiState.value = it }
         }

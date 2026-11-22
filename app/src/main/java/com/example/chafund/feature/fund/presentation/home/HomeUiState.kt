@@ -1,6 +1,7 @@
 package com.example.chafund.feature.fund.presentation.home
 
 import com.example.chafund.core.utils.Money
+import com.example.chafund.feature.fund.domain.model.PaymentMethod
 import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.fund.domain.model.TimeCategory
 
@@ -28,6 +29,11 @@ data class HomeUiState(
     val categories: List<TimeCategory> = emptyList(),
     val selectedCategoryId: Long? = null,
     val categoryError: String? = null,
+
+    // Payment method — required for both entries and expenses
+    val paymentMethods: List<PaymentMethod> = emptyList(),
+    val selectedPaymentMethodId: Long? = null,
+    val paymentMethodError: String? = null,
 
     // Date the record is filed under (defaults to today; may be pre-dated into next month)
     val selectedDateEpochDay: Long = 0L,

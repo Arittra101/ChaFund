@@ -6,6 +6,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.example.chafund.core.data.database.entity.ExpenseEntity
+import com.example.chafund.core.data.database.projection.MethodTotalProjection
 import com.example.chafund.core.data.database.relation.ExpenseWithCategory
 import kotlinx.coroutines.flow.Flow
 
@@ -30,6 +31,25 @@ interface ExpenseDao {
 
     @Query("SELECT IFNULL(SUM(amountPaisa), 0) FROM Expense WHERE monthId = :monthId")
     fun sumByMonth(monthId: Long): Flow<Long>
+
+    @Query(
+        """
+        SELECT paymentMethodId, IFNULL(SUM(amountPaisa), 0) AS totalPaisa
+        FROM Expense WHERE monthId = :monthId GROUP BY paymentMethodId
+        """
+    )
+    fun sumByMethodForMonth(monthId: Long): Flow<List<MethodTotalProjection>>
+
+    @Query(
+        """
+        SELECT paymentMethodId, IFNULL(SUM(amountPaisa), 0) AS totalPaisa
+        FROM Expense WHERE date = :date GROUP BY paymentMethodId
+        """
+    )
+    fun sumByMethodForDay(date: Long): Flow<List<MethodTotalProjection>>
+
+    @Query("SELECT COUNT(*) FROM Expense WHERE paymentMethodId = :methodId")
+    suspend fun countByPaymentMethod(methodId: Long): Int
 
     @Query("SELECT COUNT(*) FROM Expense WHERE timeCategoryId = :categoryId")
     suspend fun countByCategory(categoryId: Long): Int

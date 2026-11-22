@@ -16,6 +16,12 @@ data class TimeCategory(
     val sortOrder: Int,
 )
 
+data class PaymentMethod(
+    val id: Long,
+    val name: String,
+    val sortOrder: Int,
+)
+
 data class Group(
     val id: Long,
     val name: String,

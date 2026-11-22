@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.chafund.core.presentation.components.BreakdownCard
 import com.example.chafund.core.presentation.components.EmptyView
 import com.example.chafund.core.presentation.components.MetricCard
 import com.example.chafund.core.utils.DateTimeFormat
@@ -126,6 +127,9 @@ fun DailyHistoryScreen(
                     )
                 }
             }
+
+            // Money split by payment method for the whole month
+            item { BreakdownCard(breakdown = state.breakdown, title = "Breakdown · ${state.monthLabel}") }
 
             // Entries card (person name · date · time · amount) with total — preview, opens full list
             item { EntriesCard(state = state, onOpen = { onOpenEntries(state.monthId) }) }

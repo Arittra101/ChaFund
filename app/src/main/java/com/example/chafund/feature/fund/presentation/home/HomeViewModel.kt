@@ -7,6 +7,7 @@ import com.example.chafund.core.domain.onSuccess
 import com.example.chafund.core.utils.DateTimeFormat
 import com.example.chafund.core.utils.Money
 import com.example.chafund.feature.fund.domain.FundRepository
+import com.example.chafund.feature.fund.domain.model.PaymentMethod
 import com.example.chafund.feature.fund.domain.model.Person
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,7 +36,8 @@ class HomeViewModel(
                 repository.observeCurrentMonthSummary(),
                 repository.observeTimeCategories(),
                 repository.observePeople(),
-            ) { month, summary, categories, people ->
+                repository.observePaymentMethods(),
+            ) { month, summary, categories, people, methods ->
                 val firstCatId = if (categories.isNotEmpty()) categories.first().id else null
                 _uiState.value.copy(
                     monthLabel = month?.label ?: "",
@@ -43,8 +45,11 @@ class HomeViewModel(
                     spent = summary.totalSpent,
                     categories = categories,
                     people = people,
+                    paymentMethods = methods,
                     selectedCategoryId = _uiState.value.selectedCategoryId
                         ?: if (_uiState.value.addMode == AddMode.EXPENSE) firstCatId else null,
+                    selectedPaymentMethodId = _uiState.value.selectedPaymentMethodId
+                        ?: defaultMethodId(methods),
                 )
             }.collect { state ->
                 _uiState.value = state.copy(
@@ -81,6 +86,11 @@ class HomeViewModel(
                     selectedCategoryId = event.id, categoryError = null,
                     saveEnabled = isSaveEnabled(it.copy(selectedCategoryId = event.id))
                 )
+            }
+
+            is HomeUiEvent.OnPaymentMethodSelect -> _uiState.update {
+                val updated = it.copy(selectedPaymentMethodId = event.id, paymentMethodError = null)
+                updated.copy(saveEnabled = isSaveEnabled(updated))
             }
 
             is HomeUiEvent.OnDateSelected -> selectDate(event.epochDay)
@@ -156,6 +166,10 @@ class HomeViewModel(
         }
     }
 
+    /** Cash is the default when present, otherwise the first method the user defined. */
+    private fun defaultMethodId(methods: List<PaymentMethod>): Long? =
+        methods.find { it.name.equals("Cash", ignoreCase = true) }?.id ?: methods.firstOrNull()?.id
+
     private fun filterSuggestions(state: HomeUiState): List<Person> {
         if (state.selectedPersonId != null) return emptyList()
         val q = state.nameQuery.trim()
@@ -181,14 +195,29 @@ class HomeViewModel(
             _uiState.update { it.copy(categoryError = "Select a time category") }
             return
         }
+        if (state.selectedPaymentMethodId == null) {
+            _uiState.update { it.copy(paymentMethodError = "Select a payment method") }
+            return
+        }
 
         _uiState.update { it.copy(isSaving = true) }
 
         viewModelScope.launch {
             val result = if (state.addMode == AddMode.ENTRY) {
-                repository.addEntry(amount, state.selectedPersonId!!, state.selectedDateEpochDay)
+                repository.addEntry(
+                    amount,
+                    state.selectedPersonId!!,
+                    state.selectedPaymentMethodId,
+                    state.selectedDateEpochDay,
+                )
             } else {
-                repository.addExpense(amount, state.selectedCategoryId!!, null, state.selectedDateEpochDay)
+                repository.addExpense(
+                    amount,
+                    state.selectedCategoryId!!,
+                    state.selectedPaymentMethodId,
+                    null,
+                    state.selectedDateEpochDay,
+                )
             }
 
             result.onSuccess {
@@ -207,6 +236,7 @@ class HomeViewModel(
                             selectedPersonLabel = "",
                             nameError = null,
                             categoryError = null,
+                            paymentMethodError = null,
                             saveEnabled = false,
                             snackbarMessage = msg,
                         )
@@ -224,9 +254,10 @@ class HomeViewModel(
 
     private fun isSaveEnabled(state: HomeUiState): Boolean {
         val amountOk = state.amountInput.toDoubleOrNull()?.let { it > 0 } == true
+        val methodOk = state.selectedPaymentMethodId != null
         return when (state.addMode) {
-            AddMode.ENTRY -> amountOk && state.selectedPersonId != null
-            AddMode.EXPENSE -> amountOk && state.selectedCategoryId != null
+            AddMode.ENTRY -> amountOk && methodOk && state.selectedPersonId != null
+            AddMode.EXPENSE -> amountOk && methodOk && state.selectedCategoryId != null
         }
     }
 }

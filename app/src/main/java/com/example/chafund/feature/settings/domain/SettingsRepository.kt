@@ -6,6 +6,7 @@ import com.example.chafund.core.utils.Money
 import com.example.chafund.feature.history.domain.model.HistoryMonth
 import com.example.chafund.feature.fund.domain.model.Group
 import com.example.chafund.feature.fund.domain.model.Month
+import com.example.chafund.feature.fund.domain.model.PaymentMethod
 import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.fund.domain.model.TimeCategory
 import kotlinx.coroutines.flow.Flow
@@ -29,6 +30,7 @@ interface SettingsRepository {
     fun observePastMonths(): Flow<List<HistoryMonth>>
     fun observeTimeCategories(): Flow<List<TimeCategory>>
     fun observeGroups(): Flow<List<Group>>
+    fun observePaymentMethods(): Flow<List<PaymentMethod>>
     fun observePeople(): Flow<List<Person>>
     fun observeCarryInfo(): Flow<CarryInfo>
     suspend fun carryLastMonthBalance(): Result<Unit, DataError.Local>
@@ -42,4 +44,7 @@ interface SettingsRepository {
     suspend fun addPerson(name: String, groupId: Long): Result<Unit, DataError.Local>
     suspend fun updatePerson(id: Long, name: String, groupId: Long): Result<Unit, DataError.Local>
     suspend fun deletePerson(id: Long): Result<Unit, DataError.Local>
+    suspend fun addPaymentMethod(name: String): Result<Unit, DataError.Local>
+    suspend fun renamePaymentMethod(id: Long, name: String): Result<Unit, DataError.Local>
+    suspend fun deletePaymentMethod(id: Long): Result<Unit, DataError.Local>
 }

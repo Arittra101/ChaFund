@@ -6,6 +6,7 @@ import com.example.chafund.core.domain.onError
 import com.example.chafund.core.domain.onSuccess
 import com.example.chafund.feature.fund.domain.model.Group
 import com.example.chafund.feature.fund.domain.model.Month
+import com.example.chafund.feature.fund.domain.model.PaymentMethod
 import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.fund.domain.model.TimeCategory
 import com.example.chafund.feature.history.domain.model.HistoryMonth
@@ -25,6 +26,7 @@ data class SettingsUiState(
     val categories: List<TimeCategory> = emptyList(),
     val groups: List<Group> = emptyList(),
     val people: List<Person> = emptyList(),
+    val paymentMethods: List<PaymentMethod> = emptyList(),
     // Carry last month's balance
     val carry: CarryInfo = CarryInfo(),
     // Delete month sheet
@@ -54,6 +56,15 @@ data class SettingsUiState(
     val personNameInput: String = "",
     val personGroupId: Long? = null,
     val personError: String? = null,
+    // Add payment method sheet
+    val showAddMethodSheet: Boolean = false,
+    val methodInput: String = "",
+    val methodError: String? = null,
+    // Rename/delete payment method sheet
+    val editingMethodId: Long? = null,
+    val editingMethodName: String = "",
+    val methodRenameInput: String = "",
+    val methodRenameError: String? = null,
     val snackbarMessage: String? = null,
 )
 
@@ -93,6 +104,17 @@ sealed interface SettingsEvent {
     data object SavePerson : SettingsEvent
     data class DeletePerson(val id: Long) : SettingsEvent
 
+    // Payment methods
+    data object ShowAddMethodSheet : SettingsEvent
+    data object HideAddMethodSheet : SettingsEvent
+    data class OnMethodInputChange(val value: String) : SettingsEvent
+    data object SaveMethod : SettingsEvent
+    data class EditMethod(val id: Long, val currentName: String) : SettingsEvent
+    data object HideEditMethodSheet : SettingsEvent
+    data class OnMethodRenameInputChange(val value: String) : SettingsEvent
+    data object SaveMethodRename : SettingsEvent
+    data class DeleteMethod(val id: Long) : SettingsEvent
+
     data object CarryLastMonthBalance : SettingsEvent
 
     data object SnackbarDismissed : SettingsEvent
@@ -122,6 +144,8 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
             ) { month, past, cats, groups, people ->
                 LoadedData(month, past, cats, groups, people)
             }.combine(repository.observeCarryInfo()) { data, carry ->
+                data to carry
+            }.combine(repository.observePaymentMethods()) { (data, carry), methods ->
                 _uiState.value.copy(
                     currentMonthLabel = data.month?.label ?: "",
                     currentMonth = data.month,
@@ -129,6 +153,7 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
                     categories = data.cats,
                     groups = data.groups,
                     people = data.people,
+                    paymentMethods = methods,
                     carry = carry,
                 )
             }.collect { _uiState.value = it }
@@ -260,9 +285,85 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
             SettingsEvent.SavePerson -> savePerson()
             is SettingsEvent.DeletePerson -> deletePerson(event.id)
 
+            SettingsEvent.ShowAddMethodSheet -> _uiState.update {
+                it.copy(showAddMethodSheet = true, methodInput = "", methodError = null)
+            }
+
+            SettingsEvent.HideAddMethodSheet -> _uiState.update { it.copy(showAddMethodSheet = false) }
+            is SettingsEvent.OnMethodInputChange -> _uiState.update {
+                it.copy(methodInput = event.value, methodError = null)
+            }
+
+            SettingsEvent.SaveMethod -> saveMethod()
+            is SettingsEvent.EditMethod -> _uiState.update {
+                it.copy(
+                    editingMethodId = event.id,
+                    editingMethodName = event.currentName,
+                    methodRenameInput = event.currentName,
+                    methodRenameError = null,
+                )
+            }
+
+            SettingsEvent.HideEditMethodSheet -> _uiState.update { it.copy(editingMethodId = null) }
+            is SettingsEvent.OnMethodRenameInputChange -> _uiState.update {
+                it.copy(methodRenameInput = event.value, methodRenameError = null)
+            }
+
+            SettingsEvent.SaveMethodRename -> saveMethodRename()
+            is SettingsEvent.DeleteMethod -> deleteMethod(event.id)
+
             SettingsEvent.CarryLastMonthBalance -> carryLastMonthBalance()
 
             SettingsEvent.SnackbarDismissed -> _uiState.update { it.copy(snackbarMessage = null) }
+        }
+    }
+
+    private fun saveMethod() {
+        val name = _uiState.value.methodInput.trim()
+        if (name.isBlank()) {
+            _uiState.update { it.copy(methodError = "Name cannot be empty") }; return
+        }
+        viewModelScope.launch {
+            repository.addPaymentMethod(name)
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(showAddMethodSheet = false, snackbarMessage = "Payment method added")
+                    }
+                }
+                .onError { _uiState.update { it.copy(methodError = "Name already exists") } }
+        }
+    }
+
+    private fun saveMethodRename() {
+        val id = _uiState.value.editingMethodId ?: return
+        val name = _uiState.value.methodRenameInput.trim()
+        if (name.isBlank()) {
+            _uiState.update { it.copy(methodRenameError = "Name cannot be empty") }; return
+        }
+        viewModelScope.launch {
+            repository.renamePaymentMethod(id, name)
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(editingMethodId = null, snackbarMessage = "Payment method renamed")
+                    }
+                }
+                .onError { _uiState.update { it.copy(methodRenameError = "Name already exists") } }
+        }
+    }
+
+    private fun deleteMethod(id: Long) {
+        viewModelScope.launch {
+            repository.deletePaymentMethod(id)
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(editingMethodId = null, snackbarMessage = "Payment method deleted")
+                    }
+                }
+                .onError {
+                    _uiState.update {
+                        it.copy(snackbarMessage = "Payment method is in use and cannot be deleted")
+                    }
+                }
         }
     }
 

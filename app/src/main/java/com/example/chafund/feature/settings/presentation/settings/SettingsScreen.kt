@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -217,6 +218,47 @@ fun SettingsScreen(
                 }
             }
 
+            // Card — Payment methods
+            SettingsCard {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.AccountBalanceWallet, null)
+                        Text("Payment methods", fontSize = 14.sp, fontWeight = FontWeight.W500)
+                    }
+                    Text(
+                        "Picked on every entry and expense. Cash is the default.",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        state.paymentMethods.forEachIndexed { index, method ->
+                            CategoryChip(
+                                label = method.name,
+                                chipColor = AppColors.chipColorFor(index),
+                                onClick = { onEvent(SettingsEvent.EditMethod(method.id, method.name)) },
+                            )
+                        }
+                        CategoryChip(
+                            label = "+ Add",
+                            chipColor = com.example.chafund.ui.theme.ChipColor(
+                                fill = MaterialTheme.colorScheme.surfaceVariant,
+                                text = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
+                            onClick = { onEvent(SettingsEvent.ShowAddMethodSheet) },
+                        )
+                    }
+                }
+            }
+
             // Card — Groups (preview → opens Names & Groups screen)
             SettingsCard {
                 Column(
@@ -368,6 +410,87 @@ fun SettingsScreen(
                         contentColor = MaterialTheme.colorScheme.error
                     ),
                 ) { Text("Delete category") }
+                Spacer(Modifier.height(8.dp))
+            }
+        }
+    }
+
+    // Rename / delete payment method sheet
+    if (state.editingMethodId != null) {
+        ModalBottomSheet(onDismissRequest = { onEvent(SettingsEvent.HideEditMethodSheet) }) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    "Edit \"${state.editingMethodName}\"",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.W500
+                )
+                OutlinedTextField(
+                    value = state.methodRenameInput,
+                    onValueChange = { onEvent(SettingsEvent.OnMethodRenameInputChange(it)) },
+                    label = { Text("Payment method") },
+                    isError = state.methodRenameError != null,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
+                if (state.methodRenameError != null) {
+                    Text(
+                        state.methodRenameError,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 11.sp
+                    )
+                }
+                PrimaryButton(
+                    text = "Rename",
+                    onClick = { onEvent(SettingsEvent.SaveMethodRename) },
+                    enabled = state.methodRenameInput.isNotBlank(),
+                )
+                androidx.compose.material3.OutlinedButton(
+                    onClick = { onEvent(SettingsEvent.DeleteMethod(state.editingMethodId!!)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                ) { Text("Delete payment method") }
+                Spacer(Modifier.height(8.dp))
+            }
+        }
+    }
+
+    // Add payment method sheet
+    if (state.showAddMethodSheet) {
+        ModalBottomSheet(onDismissRequest = { onEvent(SettingsEvent.HideAddMethodSheet) }) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text("New payment method", fontSize = 17.sp, fontWeight = FontWeight.W500)
+                OutlinedTextField(
+                    value = state.methodInput,
+                    onValueChange = { onEvent(SettingsEvent.OnMethodInputChange(it)) },
+                    label = { Text("Payment method") },
+                    isError = state.methodError != null,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
+                if (state.methodError != null) {
+                    Text(
+                        state.methodError,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 11.sp
+                    )
+                }
+                PrimaryButton(
+                    text = "Add",
+                    onClick = { onEvent(SettingsEvent.SaveMethod) },
+                    enabled = state.methodInput.isNotBlank(),
+                )
                 Spacer(Modifier.height(8.dp))
             }
         }

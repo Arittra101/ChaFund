@@ -6,6 +6,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.example.chafund.core.data.database.entity.EntryEntity
 import com.example.chafund.core.data.database.projection.EntryWithPersonProjection
+import com.example.chafund.core.data.database.projection.MethodTotalProjection
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -49,6 +50,25 @@ interface EntryDao {
 
     @Query("SELECT IFNULL(SUM(amountPaisa), 0) FROM Entry WHERE monthId = :monthId")
     fun sumByMonth(monthId: Long): Flow<Long>
+
+    @Query(
+        """
+        SELECT paymentMethodId, IFNULL(SUM(amountPaisa), 0) AS totalPaisa
+        FROM Entry WHERE monthId = :monthId GROUP BY paymentMethodId
+        """
+    )
+    fun sumByMethodForMonth(monthId: Long): Flow<List<MethodTotalProjection>>
+
+    @Query(
+        """
+        SELECT paymentMethodId, IFNULL(SUM(amountPaisa), 0) AS totalPaisa
+        FROM Entry WHERE date = :date GROUP BY paymentMethodId
+        """
+    )
+    fun sumByMethodForDay(date: Long): Flow<List<MethodTotalProjection>>
+
+    @Query("SELECT COUNT(*) FROM Entry WHERE paymentMethodId = :methodId")
+    suspend fun countByPaymentMethod(methodId: Long): Int
 
     @Query("SELECT COUNT(*) FROM Entry WHERE monthId = :monthId AND isCarryOver = 1")
     suspend fun countCarryOver(monthId: Long): Int

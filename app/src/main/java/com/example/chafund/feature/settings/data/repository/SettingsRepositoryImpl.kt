@@ -3,10 +3,12 @@ package com.example.chafund.feature.settings.data.repository
 import com.example.chafund.core.data.database.dao.EntryDao
 import com.example.chafund.core.data.database.dao.ExpenseDao
 import com.example.chafund.core.data.database.dao.MonthDao
+import com.example.chafund.core.data.database.dao.PaymentMethodDao
 import com.example.chafund.core.data.database.dao.PersonDao
 import com.example.chafund.core.data.database.dao.PersonGroupDao
 import com.example.chafund.core.data.database.dao.TimeCategoryDao
 import com.example.chafund.core.data.database.entity.EntryEntity
+import com.example.chafund.core.data.database.entity.PaymentMethodEntity
 import com.example.chafund.core.data.database.entity.PersonEntity
 import com.example.chafund.core.data.database.entity.PersonGroupEntity
 import com.example.chafund.core.data.database.entity.TimeCategoryEntity
@@ -19,6 +21,7 @@ import com.example.chafund.core.utils.Money
 import com.example.chafund.feature.fund.data.mapper.toDomain
 import com.example.chafund.feature.fund.domain.model.Group
 import com.example.chafund.feature.fund.domain.model.Month
+import com.example.chafund.feature.fund.domain.model.PaymentMethod
 import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.fund.domain.model.TimeCategory
 import com.example.chafund.feature.history.data.mapper.toHistoryDomain
@@ -38,6 +41,7 @@ class SettingsRepositoryImpl(
     private val entryDao: EntryDao,
     private val groupDao: PersonGroupDao,
     private val personDao: PersonDao,
+    private val paymentMethodDao: PaymentMethodDao,
     private val dispatchers: DispatcherProvider,
 ) : SettingsRepository {
 
@@ -59,6 +63,9 @@ class SettingsRepositoryImpl(
 
     override fun observeGroups(): Flow<List<Group>> =
         groupDao.observeAll().map { list -> list.map { it.toDomain() } }
+
+    override fun observePaymentMethods(): Flow<List<PaymentMethod>> =
+        paymentMethodDao.observeAll().map { list -> list.map { it.toDomain() } }
 
     override fun observePeople(): Flow<List<Person>> =
         personDao.observeAllWithGroup().map { list -> list.map { it.toDomain() } }
@@ -95,12 +102,18 @@ class SettingsRepositoryImpl(
                 val balancePaisa = previous.totalEntriesPaisa - previous.totalSpentPaisa
                 if (balancePaisa <= 0) return@withContext Result.Error(DataError.Local.UNKNOWN)
                 val now = System.currentTimeMillis()
+                // File the carry-over under the default method so it shows up in the breakdowns.
+                val methods = paymentMethodDao.observeAll().first()
+                val defaultMethodId = methods
+                    .find { it.name.equals("Cash", ignoreCase = true) }?.id
+                    ?: methods.firstOrNull()?.id
                 entryDao.insert(
                     EntryEntity(
                         monthId = current.id,
                         amountPaisa = balancePaisa,
                         ref = "${DateTimeFormat.monthName(previous.year, previous.month)} entry",
                         personId = null,
+                        paymentMethodId = defaultMethodId,
                         date = DateTimeFormat.todayEpochDay(),
                         time = DateTimeFormat.nowTime(),
                         createdAt = now,
@@ -214,6 +227,39 @@ class SettingsRepositoryImpl(
         withContext(dispatchers.io) {
             runCatching {
                 personDao.update(id, name.trim(), groupId)
+                Result.Success(Unit)
+            }.getOrElse { Result.Error(DataError.Local.UNKNOWN) }
+        }
+
+    override suspend fun addPaymentMethod(name: String): Result<Unit, DataError.Local> =
+        withContext(dispatchers.io) {
+            runCatching {
+                paymentMethodDao.insert(
+                    PaymentMethodEntity(
+                        name = name.trim(),
+                        sortOrder = Int.MAX_VALUE,
+                        createdAt = System.currentTimeMillis(),
+                    )
+                )
+                Result.Success(Unit)
+            }.getOrElse { Result.Error(DataError.Local.UNKNOWN) }
+        }
+
+    override suspend fun renamePaymentMethod(id: Long, name: String): Result<Unit, DataError.Local> =
+        withContext(dispatchers.io) {
+            runCatching {
+                paymentMethodDao.rename(id, name.trim())
+                Result.Success(Unit)
+            }.getOrElse { Result.Error(DataError.Local.UNKNOWN) }
+        }
+
+    /** Refused while any entry or expense still points at the method. */
+    override suspend fun deletePaymentMethod(id: Long): Result<Unit, DataError.Local> =
+        withContext(dispatchers.io) {
+            val inUse = entryDao.countByPaymentMethod(id) + expenseDao.countByPaymentMethod(id)
+            if (inUse > 0) return@withContext Result.Error(DataError.Local.NOT_FOUND)
+            runCatching {
+                paymentMethodDao.deleteById(id)
                 Result.Success(Unit)
             }.getOrElse { Result.Error(DataError.Local.UNKNOWN) }
         }

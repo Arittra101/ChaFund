@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import com.example.chafund.core.presentation.components.AmountField
+import com.example.chafund.core.presentation.components.BreakdownCard
 import com.example.chafund.core.presentation.components.CategoryChip
 import com.example.chafund.core.utils.DateTimeFormat
 import com.example.chafund.core.presentation.components.ConfirmationBottomSheet
@@ -137,6 +138,9 @@ fun DayDetailScreen(
                     )
                 }
             }
+
+            // Money split by payment method for this day
+            item { BreakdownCard(breakdown = state.breakdown) }
 
             // Entries card
             item {

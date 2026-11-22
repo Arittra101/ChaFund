@@ -6,6 +6,7 @@ import com.example.chafund.core.data.database.MIGRATION_1_2
 import com.example.chafund.core.data.database.MIGRATION_2_3
 import com.example.chafund.core.data.database.MIGRATION_3_4
 import com.example.chafund.core.data.database.MIGRATION_4_5
+import com.example.chafund.core.data.database.MIGRATION_5_6
 import com.example.chafund.core.data.database.seed.SeedCallback
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -18,7 +19,7 @@ val databaseModule = module {
             "chafund.db",
         )
             .addCallback(SeedCallback())
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
             .build()
     }
     single { get<ChaFundDb>().monthDao() }
@@ -28,4 +29,5 @@ val databaseModule = module {
     single { get<ChaFundDb>().historyDao() }
     single { get<ChaFundDb>().personGroupDao() }
     single { get<ChaFundDb>().personDao() }
+    single { get<ChaFundDb>().paymentMethodDao() }
 }

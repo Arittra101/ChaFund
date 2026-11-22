@@ -5,6 +5,7 @@ import com.example.chafund.core.domain.Result
 import com.example.chafund.core.utils.Money
 import com.example.chafund.feature.fund.domain.model.Month
 import com.example.chafund.feature.fund.domain.model.MonthSummary
+import com.example.chafund.feature.fund.domain.model.PaymentMethod
 import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.fund.domain.model.TimeCategory
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,18 @@ interface FundRepository {
     fun observeCurrentMonthSummary(): Flow<MonthSummary>
     fun observeTimeCategories(): Flow<List<TimeCategory>>
     fun observePeople(): Flow<List<Person>>
-    suspend fun addEntry(amount: Money, personId: Long, dateEpochDay: Long): Result<Unit, DataError.Local>
-    suspend fun addExpense(amount: Money, categoryId: Long, ref: String?, dateEpochDay: Long): Result<Unit, DataError.Local>
+    fun observePaymentMethods(): Flow<List<PaymentMethod>>
+    suspend fun addEntry(
+        amount: Money,
+        personId: Long,
+        paymentMethodId: Long,
+        dateEpochDay: Long,
+    ): Result<Unit, DataError.Local>
+    suspend fun addExpense(
+        amount: Money,
+        categoryId: Long,
+        paymentMethodId: Long,
+        ref: String?,
+        dateEpochDay: Long,
+    ): Result<Unit, DataError.Local>
 }

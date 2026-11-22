@@ -7,6 +7,7 @@ import androidx.navigation.toRoute
 import com.example.chafund.core.data.session.Session
 import com.example.chafund.core.utils.Money
 import com.example.chafund.feature.history.domain.HistoryRepository
+import com.example.chafund.feature.history.domain.model.AmountBreakdown
 import com.example.chafund.feature.history.domain.model.DailySummary
 import com.example.chafund.feature.history.domain.model.HistoryEntry
 import com.example.chafund.navigation.Route
@@ -30,6 +31,8 @@ data class DailyHistoryUiState(
     // Entries list for the month
     val entries: List<HistoryEntry> = emptyList(),
     val entriesTotal: Money = Money.Zero,
+    // Money split by payment method across the whole month
+    val breakdown: AmountBreakdown = AmountBreakdown.Empty,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -61,7 +64,8 @@ class DailyHistoryViewModel(
                         repository.observeDailySummaries(monthId),
                         repository.observeEntriesForMonth(monthId),
                         session.currentMonthId,
-                    ) { days, entries, currentId ->
+                        repository.observeBreakdownForMonth(monthId),
+                    ) { days, entries, currentId, breakdown ->
                         DailyHistoryUiState(
                             monthId = monthId,
                             monthLabel = month?.label ?: "",
@@ -72,6 +76,7 @@ class DailyHistoryViewModel(
                             isLoading = false,
                             entries = entries,
                             entriesTotal = Money(entries.sumOf { it.amountPaisa }),
+                            breakdown = breakdown,
                         )
                     }
                 }

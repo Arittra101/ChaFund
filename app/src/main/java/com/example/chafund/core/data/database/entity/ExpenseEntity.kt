@@ -25,6 +25,7 @@ import androidx.room.PrimaryKey
         Index("monthId"),
         Index("date"),
         Index("timeCategoryId"),
+        Index("paymentMethodId"),
     ],
 )
 data class ExpenseEntity(
@@ -32,6 +33,8 @@ data class ExpenseEntity(
     val monthId: Long,
     val timeCategoryId: Long,
     val amountPaisa: Long,
+    /** Null only for rows created before payment methods existed. */
+    val paymentMethodId: Long? = null,
     val ref: String?,
     val date: Long,       // epoch-day
     val time: String,     // "HH:mm"

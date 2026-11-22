@@ -98,3 +98,40 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
         db.execSQL("ALTER TABLE `Entry` ADD COLUMN `isCarryOver` INTEGER NOT NULL DEFAULT 0")
     }
 }
+
+/**
+ * v5 -> v6: user-managed payment methods (Cash, bKash, …) and the method each entry/expense
+ * moved through. Additive only: existing rows get a NULL `paymentMethodId` and are reported
+ * as "Unspecified" in the breakdowns. The seed below mirrors [SeedCallback] so a fresh install
+ * and an upgraded one start with the same defaults.
+ */
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `PaymentMethod` (
+                `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                `name` TEXT NOT NULL COLLATE NOCASE,
+                `sortOrder` INTEGER NOT NULL,
+                `createdAt` INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_PaymentMethod_name` ON `PaymentMethod` (`name`)"
+        )
+
+        val now = System.currentTimeMillis()
+        listOf("Cash" to 1, "bKash" to 2).forEach { (name, sortOrder) ->
+            db.execSQL(
+                "INSERT OR IGNORE INTO `PaymentMethod` (`name`, `sortOrder`, `createdAt`) VALUES (?, ?, ?)",
+                arrayOf<Any>(name, sortOrder, now),
+            )
+        }
+
+        db.execSQL("ALTER TABLE `Entry` ADD COLUMN `paymentMethodId` INTEGER")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_Entry_paymentMethodId` ON `Entry` (`paymentMethodId`)")
+        db.execSQL("ALTER TABLE `Expense` ADD COLUMN `paymentMethodId` INTEGER")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_Expense_paymentMethodId` ON `Expense` (`paymentMethodId`)")
+    }
+}

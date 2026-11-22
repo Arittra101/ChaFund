@@ -53,6 +53,7 @@ import com.example.chafund.core.presentation.components.NameOption
 import com.example.chafund.core.presentation.components.NamePicker
 import com.example.chafund.core.presentation.components.PrimaryButton
 import com.example.chafund.core.presentation.components.SegmentedToggle
+import com.example.chafund.feature.fund.domain.model.PaymentMethod
 import com.example.chafund.feature.fund.domain.model.TimeCategory
 import com.example.chafund.ui.theme.AppColors
 
@@ -254,6 +255,14 @@ private fun AddCard(
                 )
             }
 
+            // Payment method — required for entries and expenses alike
+            PaymentMethodSection(
+                methods = state.paymentMethods,
+                selectedMethodId = state.selectedPaymentMethodId,
+                error = state.paymentMethodError,
+                onSelect = { onEvent(HomeUiEvent.OnPaymentMethodSelect(it)) },
+            )
+
             // Date selector — defaults to today, can be pre-dated into next month
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Surface(
@@ -330,6 +339,47 @@ private fun CategorySection(
                     selected = cat.id == selectedCategoryId,
                     onClick = { onSelect(cat.id) },
                 )
+            }
+        }
+        if (error != null) {
+            Text(text = error, color = MaterialTheme.colorScheme.error, fontSize = 11.sp)
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PaymentMethodSection(
+    methods: List<PaymentMethod>,
+    selectedMethodId: Long?,
+    error: String?,
+    onSelect: (Long) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = "Payment method",
+            fontSize = 11.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (methods.isEmpty()) {
+            Text(
+                text = "Add a payment method in Settings first.",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                methods.forEachIndexed { index, method ->
+                    CategoryChip(
+                        label = method.name,
+                        chipColor = AppColors.chipColorFor(index),
+                        selected = method.id == selectedMethodId,
+                        onClick = { onSelect(method.id) },
+                    )
+                }
             }
         }
         if (error != null) {

@@ -7,12 +7,14 @@ import com.example.chafund.core.data.database.dao.ExpenseDao
 import com.example.chafund.core.data.database.dao.HistoryDao
 import com.example.chafund.core.data.database.dao.MonthDao
 import com.example.chafund.core.data.database.dao.PersonDao
+import com.example.chafund.core.data.database.dao.PaymentMethodDao
 import com.example.chafund.core.data.database.dao.PersonGroupDao
 import com.example.chafund.core.data.database.dao.TimeCategoryDao
 import com.example.chafund.core.data.database.entity.EntryEntity
 import com.example.chafund.core.data.database.entity.ExpenseEntity
 import com.example.chafund.core.data.database.entity.MonthEntity
 import com.example.chafund.core.data.database.entity.PersonEntity
+import com.example.chafund.core.data.database.entity.PaymentMethodEntity
 import com.example.chafund.core.data.database.entity.PersonGroupEntity
 import com.example.chafund.core.data.database.entity.TimeCategoryEntity
 
@@ -24,8 +26,9 @@ import com.example.chafund.core.data.database.entity.TimeCategoryEntity
         ExpenseEntity::class,
         PersonGroupEntity::class,
         PersonEntity::class,
+        PaymentMethodEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class ChaFundDb : RoomDatabase() {
@@ -36,4 +39,5 @@ abstract class ChaFundDb : RoomDatabase() {
     abstract fun historyDao(): HistoryDao
     abstract fun personGroupDao(): PersonGroupDao
     abstract fun personDao(): PersonDao
+    abstract fun paymentMethodDao(): PaymentMethodDao
 }

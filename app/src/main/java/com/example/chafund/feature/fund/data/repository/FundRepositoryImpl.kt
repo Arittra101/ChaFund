@@ -5,6 +5,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.example.chafund.core.data.database.dao.EntryDao
 import com.example.chafund.core.data.database.dao.ExpenseDao
 import com.example.chafund.core.data.database.dao.MonthDao
+import com.example.chafund.core.data.database.dao.PaymentMethodDao
 import com.example.chafund.core.data.database.dao.PersonDao
 import com.example.chafund.core.data.database.dao.TimeCategoryDao
 import com.example.chafund.core.data.database.entity.EntryEntity
@@ -20,6 +21,7 @@ import com.example.chafund.feature.fund.data.mapper.toDomain
 import com.example.chafund.feature.fund.domain.FundRepository
 import com.example.chafund.feature.fund.domain.model.Month
 import com.example.chafund.feature.fund.domain.model.MonthSummary
+import com.example.chafund.feature.fund.domain.model.PaymentMethod
 import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.fund.domain.model.TimeCategory
 import kotlinx.coroutines.flow.Flow
@@ -37,6 +39,7 @@ class FundRepositoryImpl(
     private val expenseDao: ExpenseDao,
     private val categoryDao: TimeCategoryDao,
     private val personDao: PersonDao,
+    private val paymentMethodDao: PaymentMethodDao,
     private val session: Session,
     private val dispatchers: DispatcherProvider,
 ) : FundRepository {
@@ -69,9 +72,13 @@ class FundRepositoryImpl(
     override fun observePeople(): Flow<List<Person>> =
         personDao.observeAllWithGroup().map { list -> list.map { it.toDomain() } }
 
+    override fun observePaymentMethods(): Flow<List<PaymentMethod>> =
+        paymentMethodDao.observeAll().map { list -> list.map { it.toDomain() } }
+
     override suspend fun addEntry(
         amount: Money,
         personId: Long,
+        paymentMethodId: Long,
         dateEpochDay: Long,
     ): Result<Unit, DataError.Local> = withContext(dispatchers.io) {
         try {
@@ -82,6 +89,7 @@ class FundRepositoryImpl(
                     amountPaisa = amount.paisa,
                     ref = null,
                     personId = personId,
+                    paymentMethodId = paymentMethodId,
                     date = dateEpochDay,
                     time = DateTimeFormat.nowTime(),
                     createdAt = now,
@@ -97,6 +105,7 @@ class FundRepositoryImpl(
     override suspend fun addExpense(
         amount: Money,
         categoryId: Long,
+        paymentMethodId: Long,
         ref: String?,
         dateEpochDay: Long,
     ): Result<Unit, DataError.Local> = withContext(dispatchers.io) {
@@ -106,6 +115,7 @@ class FundRepositoryImpl(
                 ExpenseEntity(
                     monthId = resolveMonthId(dateEpochDay),
                     timeCategoryId = categoryId,
+                    paymentMethodId = paymentMethodId,
                     amountPaisa = amount.paisa,
                     ref = ref?.takeIf { it.isNotBlank() },
                     date = dateEpochDay,

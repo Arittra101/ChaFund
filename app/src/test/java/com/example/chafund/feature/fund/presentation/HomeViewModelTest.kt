@@ -6,6 +6,8 @@ import com.example.chafund.core.domain.Result
 import com.example.chafund.core.utils.Money
 import com.example.chafund.feature.fund.domain.model.Month
 import com.example.chafund.feature.fund.domain.model.MonthSummary
+import com.example.chafund.feature.fund.domain.model.PaymentMethod
+import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.fund.domain.model.TimeCategory
 import com.example.chafund.feature.fund.presentation.home.AddMode
 import com.example.chafund.feature.fund.presentation.home.HomeUiEvent
@@ -35,6 +37,8 @@ class HomeViewModelTest {
     fun setup() {
         Dispatchers.setMain(dispatcher)
         repo = FakeFundRepository()
+        repo.setPaymentMethods(listOf(PaymentMethod(1L, "Cash", 1), PaymentMethod(2L, "bKash", 2)))
+        repo.setPeople(listOf(Person(1L, "Rahim", 1L, "Office")))
         vm   = HomeViewModel(repo)
     }
 
@@ -80,10 +84,11 @@ class HomeViewModelTest {
     fun switchToExpenseModeAutoSelectsFirstCategory() = runTest {
         val categories = listOf(TimeCategory(1L, "Morning", 1), TimeCategory(2L, "Noon", 2))
         repo.setCategories(categories)
+        dispatcher.scheduler.advanceUntilIdle()
+        // EXPENSE is the default tab, so switch away first to observe the auto-select on return.
+        vm.onEvent(HomeUiEvent.OnModeChange(AddMode.ENTRY))
         vm.uiState.test {
-            awaitItem() // initial
-            dispatcher.scheduler.advanceUntilIdle()
-            awaitItem() // categories loaded
+            awaitItem() // entry mode
             vm.onEvent(HomeUiEvent.OnModeChange(AddMode.EXPENSE))
             val state = awaitItem()
             assertEquals(AddMode.EXPENSE, state.addMode)
@@ -103,9 +108,11 @@ class HomeViewModelTest {
 
     @Test
     fun saveEnabledAfterValidAmountEntry() = runTest {
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onEvent(HomeUiEvent.OnModeChange(AddMode.ENTRY))
+        vm.onEvent(HomeUiEvent.OnPersonSelect(1L))
+        vm.onEvent(HomeUiEvent.OnAmountChange("100"))
         vm.uiState.test {
-            awaitItem()
-            vm.onEvent(HomeUiEvent.OnAmountChange("100"))
             val state = awaitItem()
             assertTrue(state.saveEnabled)
             cancelAndIgnoreRemainingEvents()
@@ -113,7 +120,37 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun cashIsSelectedByDefault() = runTest {
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.uiState.test {
+            assertEquals(1L, awaitItem().selectedPaymentMethodId)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun saveBlockedWithoutPaymentMethod() = runTest {
+        repo.setPaymentMethods(emptyList())
+        val freshVm = HomeViewModel(repo)
+        dispatcher.scheduler.advanceUntilIdle()
+        freshVm.onEvent(HomeUiEvent.OnModeChange(AddMode.ENTRY))
+        freshVm.onEvent(HomeUiEvent.OnPersonSelect(1L))
+        freshVm.onEvent(HomeUiEvent.OnAmountChange("100"))
+        freshVm.onEvent(HomeUiEvent.OnSave)
+        dispatcher.scheduler.advanceUntilIdle()
+        freshVm.uiState.test {
+            val state = awaitItem()
+            assertNotNull(state.paymentMethodError)
+            assertTrue(!state.saveEnabled)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun saveEntryShowsSnackbarOnSuccess() = runTest {
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onEvent(HomeUiEvent.OnModeChange(AddMode.ENTRY))
+        vm.onEvent(HomeUiEvent.OnPersonSelect(1L))
         vm.onEvent(HomeUiEvent.OnAmountChange("500"))
         dispatcher.scheduler.advanceUntilIdle()
         vm.onEvent(HomeUiEvent.OnSave)
@@ -129,6 +166,9 @@ class HomeViewModelTest {
     @Test
     fun saveEntryShowsErrorOnFailure() = runTest {
         repo.addEntryResult = Result.Error(DataError.Local.UNKNOWN)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onEvent(HomeUiEvent.OnModeChange(AddMode.ENTRY))
+        vm.onEvent(HomeUiEvent.OnPersonSelect(1L))
         vm.onEvent(HomeUiEvent.OnAmountChange("500"))
         dispatcher.scheduler.advanceUntilIdle()
         vm.onEvent(HomeUiEvent.OnSave)
@@ -167,14 +207,16 @@ class HomeViewModelTest {
 
     @Test
     fun formResetsAfterSuccessfulSave() = runTest {
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onEvent(HomeUiEvent.OnModeChange(AddMode.ENTRY))
+        vm.onEvent(HomeUiEvent.OnPersonSelect(1L))
         vm.onEvent(HomeUiEvent.OnAmountChange("300"))
-        vm.onEvent(HomeUiEvent.OnRefChange("lunch"))
         vm.onEvent(HomeUiEvent.OnSave)
         dispatcher.scheduler.advanceUntilIdle()
         vm.uiState.test {
             val state = awaitItem()
             assertEquals("", state.amountInput)
-            assertEquals("", state.refInput)
+            assertNull(state.selectedPersonId)
             cancelAndIgnoreRemainingEvents()
         }
     }
