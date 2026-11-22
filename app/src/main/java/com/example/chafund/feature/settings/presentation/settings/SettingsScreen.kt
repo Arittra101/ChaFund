@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -540,51 +542,95 @@ private fun DeleteMonthSheet(
     onDelete: (Long) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.padding(bottom = 32.dp)) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor   = MaterialTheme.colorScheme.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp)
+                .padding(top = 4.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             Text(
                 text = "Delete a month",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.W500,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "Past months only. Current month can't be deleted.",
-                fontSize = 12.sp,
+                text = "Past months only — the current month can't be deleted.",
+                fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 20.dp),
             )
-            Spacer(Modifier.height(8.dp))
+
             if (months.isEmpty()) {
                 Text(
                     text = "No past months to delete yet.",
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                    modifier = Modifier.padding(vertical = 20.dp),
                 )
             } else {
-                months.forEach { month ->
-                    ListItem(
-                        headlineContent = { Text(month.label, fontSize = 14.sp) },
-                        supportingContent = {
-                            Text(
-                                "Entry ${month.totalEntries.formatTk()} · Spent ${month.totalSpent.formatTk()}",
-                                fontSize = 11.sp,
-                            )
-                        },
-                        trailingContent = {
-                            IconButton(onClick = { onDelete(month.id) }) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    "Delete",
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        },
-                    )
-                    HorizontalDivider(thickness = 0.5.dp)
+                val shape = RoundedCornerShape(14.dp)
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .border(0.5.dp, AppColors.BorderLight, shape)
+                        // Cap the list so a long history still leaves the sheet usable.
+                        .heightIn(max = 320.dp)
+                        .verticalScroll(rememberScrollState()),
+                    shape = shape,
+                    color = MaterialTheme.colorScheme.surface,
+                ) {
+                    Column {
+                        months.forEachIndexed { index, month ->
+                            MonthDeleteRow(month = month, onDelete = { onDelete(month.id) })
+                            if (index < months.lastIndex) HorizontalDivider(thickness = 0.5.dp)
+                        }
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun MonthDeleteRow(month: HistoryMonth, onDelete: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 14.dp, end = 4.dp)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            Text(text = month.label, fontSize = 14.sp, fontWeight = FontWeight.W500)
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "Entry ${month.totalEntries.formatTk()}",
+                    fontSize = 11.sp,
+                    color = AppColors.BalanceTextLight,
+                )
+                Text(
+                    text = "Spent ${month.totalSpent.formatTk()}",
+                    fontSize = 11.sp,
+                    color = AppColors.SpentText,
+                )
+            }
+        }
+        IconButton(onClick = onDelete) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete ${month.label}",
+                tint = MaterialTheme.colorScheme.error,
+            )
         }
     }
 }
