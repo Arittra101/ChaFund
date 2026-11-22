@@ -16,6 +16,7 @@ data class HistoryEntry(
     val amountPaisa: Long,
     val ref: String?,
     val personId: Long?,
+    val paymentMethodId: Long?,
     val personName: String?,
     val groupName: String?,
     val time: String,
@@ -30,6 +31,7 @@ data class HistoryEntry(
 data class HistoryExpense(
     val id: Long,
     val amountPaisa: Long,
+    val paymentMethodId: Long?,
     val ref: String?,
     val time: String,
     val date: Long,

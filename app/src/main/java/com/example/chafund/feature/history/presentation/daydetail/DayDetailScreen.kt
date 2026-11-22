@@ -3,6 +3,8 @@ package com.example.chafund.feature.history.presentation.daydetail
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -316,6 +318,7 @@ private fun ExpenseGroupSection(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun EditSheet(state: DayDetailUiState, onEvent: (DayDetailEvent) -> Unit) {
     val label = if (state.editingEntry != null) "Edit entry" else "Edit expense"
@@ -354,6 +357,34 @@ private fun EditSheet(state: DayDetailUiState, onEvent: (DayDetailEvent) -> Unit
                     colors        = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
                     ),
+                )
+            }
+        }
+        // Payment method — editable for entries and expenses alike
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                "Payment method",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                state.paymentMethods.forEachIndexed { index, method ->
+                    CategoryChip(
+                        label = method.name,
+                        chipColor = AppColors.chipColorFor(index),
+                        selected = method.id == state.editPaymentMethodId,
+                        onClick = { onEvent(DayDetailEvent.OnEditPaymentMethodSelect(method.id)) },
+                    )
+                }
+            }
+            if (state.editPaymentMethodError != null) {
+                Text(
+                    text = state.editPaymentMethodError,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 11.sp,
                 )
             }
         }

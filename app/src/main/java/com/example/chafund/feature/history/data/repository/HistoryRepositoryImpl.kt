@@ -9,7 +9,9 @@ import com.example.chafund.core.data.database.dao.PersonDao
 import com.example.chafund.core.domain.DataError
 import com.example.chafund.core.domain.DispatcherProvider
 import com.example.chafund.core.domain.Result
+import com.example.chafund.feature.fund.data.mapper.toDomain as paymentMethodToDomain
 import com.example.chafund.feature.fund.data.mapper.toDomain as personToDomain
+import com.example.chafund.feature.fund.domain.model.PaymentMethod
 import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.history.data.mapper.toDomain
 import com.example.chafund.feature.history.data.mapper.toHistoryDomain
@@ -105,6 +107,9 @@ class HistoryRepositoryImpl(
     override fun observePeople(): Flow<List<Person>> =
         personDao.observeAllWithGroup().map { list -> list.map { it.personToDomain() } }
 
+    override fun observePaymentMethods(): Flow<List<PaymentMethod>> =
+        paymentMethodDao.observeAll().map { list -> list.map { it.paymentMethodToDomain() } }
+
     override fun observeExpensesForDay(date: Long): Flow<List<ExpenseGrouped>> =
         expenseDao.observeByDate(date).map { list ->
             list.map { it.toHistoryDomain() }
@@ -123,7 +128,8 @@ class HistoryRepositoryImpl(
     override suspend fun updateEntry(
         id: Long,
         amountPaisa: Long,
-        personId: Long?
+        personId: Long?,
+        paymentMethodId: Long?,
     ): Result<Unit, DataError.Local> =
         withContext(dispatchers.io) {
             runCatching {
@@ -135,6 +141,7 @@ class HistoryRepositoryImpl(
                     entity.copy(
                         amountPaisa = amountPaisa,
                         personId = personId,
+                        paymentMethodId = paymentMethodId,
                         ref = if (personId != null) null else entity.ref,
                         updatedAt = System.currentTimeMillis()
                     )
@@ -155,7 +162,8 @@ class HistoryRepositoryImpl(
         id: Long,
         amountPaisa: Long,
         categoryId: Long,
-        ref: String?
+        paymentMethodId: Long?,
+        ref: String?,
     ): Result<Unit, DataError.Local> =
         withContext(dispatchers.io) {
             runCatching {
@@ -165,6 +173,7 @@ class HistoryRepositoryImpl(
                     entity.copy(
                         amountPaisa = amountPaisa,
                         timeCategoryId = categoryId,
+                        paymentMethodId = paymentMethodId,
                         ref = ref,
                         updatedAt = System.currentTimeMillis(),
                     )

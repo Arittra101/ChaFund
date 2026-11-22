@@ -7,6 +7,7 @@ import androidx.navigation.toRoute
 import com.example.chafund.core.data.session.Session
 import com.example.chafund.core.domain.onSuccess
 import com.example.chafund.core.utils.Money
+import com.example.chafund.feature.fund.domain.model.PaymentMethod
 import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.history.domain.HistoryRepository
 import com.example.chafund.feature.history.domain.model.AmountBreakdown
@@ -31,6 +32,7 @@ data class DayDetailUiState(
     val groups: List<ExpenseGrouped> = emptyList(),
     val totalSpent: Money = Money.Zero,
     val people: List<Person> = emptyList(),
+    val paymentMethods: List<PaymentMethod> = emptyList(),
     // Money split by payment method for this day
     val breakdown: AmountBreakdown = AmountBreakdown.Empty,
     // Edit state
@@ -44,6 +46,9 @@ data class DayDetailUiState(
     val editNameSuggestions: List<Person> = emptyList(),
     val editPersonId: Long? = null,
     val editPersonLabel: String = "",
+    // Payment method (edit) — applies to entries and expenses alike
+    val editPaymentMethodId: Long? = null,
+    val editPaymentMethodError: String? = null,
     // Delete state
     val pendingDeleteId: Long? = null,
     val pendingDeleteType: DeleteType? = null,
@@ -58,6 +63,7 @@ sealed interface DayDetailEvent {
     data class OnEditNameQueryChange(val value: String) : DayDetailEvent
     data class OnEditPersonSelect(val id: Long) : DayDetailEvent
     data object OnEditPersonClear : DayDetailEvent
+    data class OnEditPaymentMethodSelect(val id: Long) : DayDetailEvent
     data object SaveEdit : DayDetailEvent
     data class RequestDelete(val id: Long, val type: DeleteType) : DayDetailEvent
     data object ConfirmDelete : DayDetailEvent
@@ -90,7 +96,8 @@ class DayDetailViewModel(
                 repository.observeExpensesForDay(date),
                 repository.observePeople(),
                 repository.observeBreakdownForDay(date),
-            ) { entries, groups, people, breakdown ->
+                repository.observePaymentMethods(),
+            ) { entries, groups, people, breakdown, methods ->
                 val totalSpent =
                     groups.flatMap { it.expenses }.sumOf { it.amountPaisa }.let { Money(it) }
                 val dateLabel = com.example.chafund.core.utils.DateTimeFormat.formatDate(date)
@@ -103,6 +110,7 @@ class DayDetailViewModel(
                     totalSpent = totalSpent,
                     people = people,
                     breakdown = breakdown,
+                    paymentMethods = methods,
                 )
             }.collect { _uiState.value = it }
         }
@@ -120,6 +128,8 @@ class DayDetailViewModel(
                     editPersonLabel = if (hasPerson) "${event.entry.personName} ~ ${event.entry.groupName}" else "",
                     editNameQuery = "",
                     editNameSuggestions = emptyList(),
+                    editPaymentMethodId = event.entry.paymentMethodId ?: defaultMethodId(it.paymentMethods),
+                    editPaymentMethodError = null,
                 )
             }
 
@@ -129,6 +139,8 @@ class DayDetailViewModel(
                     editingEntry = null,
                     editAmountInput = Money(event.expense.amountPaisa).paisa.div(100.0).toString(),
                     editRefInput = event.expense.ref ?: "",
+                    editPaymentMethodId = event.expense.paymentMethodId ?: defaultMethodId(it.paymentMethods),
+                    editPaymentMethodError = null,
                 )
             }
 
@@ -156,6 +168,10 @@ class DayDetailViewModel(
                 updated.copy(editNameSuggestions = filterSuggestions(updated))
             }
 
+            is DayDetailEvent.OnEditPaymentMethodSelect -> _uiState.update {
+                it.copy(editPaymentMethodId = event.id, editPaymentMethodError = null)
+            }
+
             DayDetailEvent.SaveEdit -> saveEdit()
             is DayDetailEvent.RequestDelete -> _uiState.update {
                 it.copy(pendingDeleteId = event.id, pendingDeleteType = event.type)
@@ -180,6 +196,10 @@ class DayDetailViewModel(
         }
     }
 
+    /** Cash when present, otherwise the first defined method — matches the add form. */
+    private fun defaultMethodId(methods: List<PaymentMethod>): Long? =
+        methods.find { it.name.equals("Cash", ignoreCase = true) }?.id ?: methods.firstOrNull()?.id
+
     private fun filterSuggestions(state: DayDetailUiState): List<Person> {
         if (state.editPersonId != null) return emptyList()
         val q = state.editNameQuery.trim()
@@ -196,12 +216,17 @@ class DayDetailViewModel(
             _uiState.update { it.copy(editAmountError = "Enter a valid amount") }
             return
         }
+        if (state.editPaymentMethodId == null && state.paymentMethods.isNotEmpty()) {
+            _uiState.update { it.copy(editPaymentMethodError = "Select a payment method") }
+            return
+        }
         viewModelScope.launch {
             if (state.editingEntry != null) {
                 repository.updateEntry(
                     state.editingEntry.id,
                     amount.paisa,
-                    state.editPersonId)
+                    state.editPersonId,
+                    state.editPaymentMethodId)
                     .onSuccess {
                         _uiState.update {
                             it.copy(
@@ -215,6 +240,7 @@ class DayDetailViewModel(
                     state.editingExpense.id,
                     amount.paisa,
                     state.editingExpense.categoryId,
+                    state.editPaymentMethodId,
                     state.editRefInput.ifBlank { null })
                     .onSuccess {
                         _uiState.update {

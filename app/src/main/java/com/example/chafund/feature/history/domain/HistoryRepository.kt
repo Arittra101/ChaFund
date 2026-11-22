@@ -3,6 +3,7 @@ package com.example.chafund.feature.history.domain
 import com.example.chafund.core.domain.DataError
 import com.example.chafund.core.domain.Result
 import com.example.chafund.core.utils.Money
+import com.example.chafund.feature.fund.domain.model.PaymentMethod
 import com.example.chafund.feature.fund.domain.model.Person
 import com.example.chafund.feature.history.domain.model.AmountBreakdown
 import com.example.chafund.feature.history.domain.model.DailySummary
@@ -22,9 +23,21 @@ interface HistoryRepository {
     fun observeEntriesForDay(date: Long): Flow<List<HistoryEntry>>
     fun observeExpensesForDay(date: Long): Flow<List<ExpenseGrouped>>
     fun observePeople(): Flow<List<Person>>
+    fun observePaymentMethods(): Flow<List<PaymentMethod>>
 
-    suspend fun updateEntry(id: Long, amountPaisa: Long, personId: Long?): Result<Unit, DataError.Local>
+    suspend fun updateEntry(
+        id: Long,
+        amountPaisa: Long,
+        personId: Long?,
+        paymentMethodId: Long?,
+    ): Result<Unit, DataError.Local>
     suspend fun deleteEntry(id: Long): Result<Unit, DataError.Local>
-    suspend fun updateExpense(id: Long, amountPaisa: Long, categoryId: Long, ref: String?): Result<Unit, DataError.Local>
+    suspend fun updateExpense(
+        id: Long,
+        amountPaisa: Long,
+        categoryId: Long,
+        paymentMethodId: Long?,
+        ref: String?,
+    ): Result<Unit, DataError.Local>
     suspend fun deleteExpense(id: Long): Result<Unit, DataError.Local>
 }
