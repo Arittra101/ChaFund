@@ -6,6 +6,7 @@ sealed interface HomeUiEvent {
     data class OnNameQueryChange(val value: String) : HomeUiEvent
     data class OnPersonSelect(val id: Long) : HomeUiEvent
     data object OnPersonClear : HomeUiEvent
+    data class OnRemarksChange(val value: String) : HomeUiEvent
     data class OnCategorySelect(val id: Long) : HomeUiEvent
     data class OnPaymentMethodSelect(val id: Long) : HomeUiEvent
     data class OnDateSelected(val epochDay: Long) : HomeUiEvent

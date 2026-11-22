@@ -25,6 +25,9 @@ data class HomeUiState(
     val selectedPersonLabel: String = "",
     val nameError: String? = null,
 
+    // Expense — optional free-text remarks stored as the record's ref
+    val remarksInput: String = "",
+
     // Expense — time category
     val categories: List<TimeCategory> = emptyList(),
     val selectedCategoryId: Long? = null,

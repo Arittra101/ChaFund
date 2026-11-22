@@ -25,6 +25,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -253,6 +255,10 @@ private fun AddCard(
                     error = state.categoryError,
                     onSelect = { onEvent(HomeUiEvent.OnCategorySelect(it)) },
                 )
+                RemarksField(
+                    value = state.remarksInput,
+                    onValueChange = { onEvent(HomeUiEvent.OnRemarksChange(it)) },
+                )
             }
 
             // Payment method — required for entries and expenses alike
@@ -344,6 +350,32 @@ private fun CategorySection(
         if (error != null) {
             Text(text = error, color = MaterialTheme.colorScheme.error, fontSize = 11.sp)
         }
+    }
+}
+
+/** Optional free-text note saved with an expense; shown on the expense rows in history. */
+@Composable
+private fun RemarksField(
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = "Remarks · optional",
+            fontSize = 11.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        OutlinedTextField(
+            value = value,
+            onValueChange = { if (it.length <= 80) onValueChange(it) },
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("e.g. office tea round", fontSize = 13.sp) },
+            singleLine = true,
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+            ),
+        )
     }
 }
 

@@ -81,6 +81,8 @@ class HomeViewModel(
             is HomeUiEvent.OnPersonSelect -> onPersonSelect(event.id)
             HomeUiEvent.OnPersonClear -> onPersonClear()
 
+            is HomeUiEvent.OnRemarksChange -> _uiState.update { it.copy(remarksInput = event.value) }
+
             is HomeUiEvent.OnCategorySelect -> _uiState.update {
                 it.copy(
                     selectedCategoryId = event.id, categoryError = null,
@@ -108,6 +110,7 @@ class HomeViewModel(
                 amountError = null,
                 nameError = null,
                 categoryError = null,
+                remarksInput = if (mode == AddMode.EXPENSE) state.remarksInput else "",
                 selectedCategoryId = if (mode == AddMode.EXPENSE) firstCatId else null,
             )
             updated.copy(saveEnabled = isSaveEnabled(updated))
@@ -215,7 +218,7 @@ class HomeViewModel(
                     amount,
                     state.selectedCategoryId!!,
                     state.selectedPaymentMethodId,
-                    null,
+                    state.remarksInput.trim().ifBlank { null },
                     state.selectedDateEpochDay,
                 )
             }
@@ -230,6 +233,7 @@ class HomeViewModel(
                             isSaving = false,
                             amountInput = "",
                             amountError = null,
+                            remarksInput = "",
                             nameQuery = "",
                             nameSuggestions = emptyList(),
                             selectedPersonId = null,

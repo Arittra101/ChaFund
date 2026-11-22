@@ -346,12 +346,12 @@ private fun EditSheet(state: DayDetailUiState, onEvent: (DayDetailEvent) -> Unit
             )
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Ref note · optional", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Remarks · optional", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 OutlinedTextField(
                     value         = state.editRefInput,
                     onValueChange = { if (it.length <= 80) onEvent(DayDetailEvent.OnEditRefChange(it)) },
                     modifier      = Modifier.fillMaxWidth(),
-                    placeholder   = { Text("e.g. office collection", fontSize = 13.sp) },
+                    placeholder   = { Text("e.g. office tea round", fontSize = 13.sp) },
                     singleLine    = true,
                     shape         = RoundedCornerShape(8.dp),
                     colors        = OutlinedTextFieldDefaults.colors(
