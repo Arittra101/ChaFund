@@ -210,10 +210,10 @@ private fun AddCard(
         ) {
             // Segmented toggle
             SegmentedToggle(
-                options = listOf("Add entry", "Add expense"),
-                selectedIndex = if (state.addMode == AddMode.ENTRY) 0 else 1,
+                options = listOf("Add expense", "Add entry"),
+                selectedIndex = if (state.addMode == AddMode.EXPENSE) 0 else 1,
                 onSelect = { idx ->
-                    onEvent(HomeUiEvent.OnModeChange(if (idx == 0) AddMode.ENTRY else AddMode.EXPENSE))
+                    onEvent(HomeUiEvent.OnModeChange(if (idx == 0) AddMode.EXPENSE else AddMode.ENTRY))
                 },
             )
 

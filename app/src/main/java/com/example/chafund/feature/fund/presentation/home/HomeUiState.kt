@@ -12,7 +12,7 @@ data class HomeUiState(
     val spent: Money = Money.Zero,
 
     // Add form
-    val addMode: AddMode = AddMode.ENTRY,
+    val addMode: AddMode = AddMode.EXPENSE,
     val amountInput: String = "",
     val amountError: String? = null,
 
