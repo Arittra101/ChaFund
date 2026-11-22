@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.chafund.navigation.AppNavHost
 import com.example.chafund.navigation.Navigator
 import com.example.chafund.ui.theme.ChaFundTheme
@@ -15,6 +16,8 @@ class MainActivity : ComponentActivity() {
     private val navigator: Navigator by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Must run before super.onCreate() so the system splash hands over to the app theme.
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         enableEdgeToEdge()

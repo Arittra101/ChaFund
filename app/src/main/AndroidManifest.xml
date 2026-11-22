@@ -17,7 +17,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.ChaFund"
+            android:theme="@style/Theme.ChaFund.Splash"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait">
             <intent-filter>
