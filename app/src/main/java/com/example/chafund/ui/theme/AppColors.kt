@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 data class AppColorScheme(
     val balanceFill: Color,
     val balanceText: Color,
+    val primaryContent: Color,
     val spentFill: Color,
     val spentText: Color,
     val entryDeltaText: Color,
@@ -25,6 +26,7 @@ data class ChipColor(val fill: Color, val text: Color)
 val LightAppColorScheme = AppColorScheme(
     balanceFill    = Color(0xFFE6F1FB),
     balanceText    = Color(0xFF185FA5),
+    primaryContent = Color(0xFFFFFFFF),   // white on the deep blue fill
     spentFill      = Color(0xFFFAECE7),
     spentText      = Color(0xFF993C1D),
     entryDeltaText = Color(0xFF1B7A50),
@@ -41,6 +43,7 @@ val LightAppColorScheme = AppColorScheme(
 val DarkAppColorScheme = AppColorScheme(
     balanceFill    = Color(0xFF0C447C),   // deep blue — contrast on dark surface
     balanceText    = Color(0xFF85B7EB),   // light blue
+    primaryContent = Color(0xFF08294A),   // deep navy on the light-blue fill
     spentFill      = Color(0xFF2D1208),   // deep coral-brown
     spentText      = Color(0xFFFFAB91),   // light salmon
     entryDeltaText = Color(0xFF5BBF88),   // light green — visible on dark
@@ -64,6 +67,7 @@ object AppColors {
     val BalanceFillLight: Color  @Composable get() = LocalAppColors.current.balanceFill
     val BalanceFillDark: Color   @Composable get() = LocalAppColors.current.balanceFill
     val BalanceTextLight: Color  @Composable get() = LocalAppColors.current.balanceText
+    val PrimaryContent: Color    @Composable get() = LocalAppColors.current.primaryContent
     val BalanceTextDark: Color   @Composable get() = LocalAppColors.current.balanceText
     val SpentFill: Color         @Composable get() = LocalAppColors.current.spentFill
     val SpentText: Color         @Composable get() = LocalAppColors.current.spentText

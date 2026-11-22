@@ -1,10 +1,16 @@
 package com.example.chafund.navigation
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -12,6 +18,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.chafund.bottombar.ChaFundBottomBar
+import com.example.chafund.core.presentation.components.ConfirmationBottomSheet
 import com.example.chafund.feature.fund.presentation.home.HomeScreenRoot
 import com.example.chafund.feature.fund.presentation.home.HomeViewModel
 import com.example.chafund.feature.history.presentation.daily.DailyHistoryScreenRoot
@@ -28,6 +35,7 @@ import com.example.chafund.feature.settings.presentation.settings.SettingsViewMo
 import org.koin.androidx.compose.koinViewModel
 
 @SuppressLint("RestrictedApi")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavHost(navigator: Navigator) {
     val navController = rememberNavController()
@@ -58,6 +66,26 @@ fun AppNavHost(navigator: Navigator) {
         navBackStackEntry?.destination?.hasRoute(dest.route::class) == true
     }
 
+
+    // Pressing back on the root destination asks before leaving the app.
+    val activity = LocalActivity.current
+    var showExitSheet by remember { mutableStateOf(false) }
+    val isAtRootDestination = navController.previousBackStackEntry == null
+
+    BackHandler(enabled = isAtRootDestination && !showExitSheet) { showExitSheet = true }
+
+    if (showExitSheet) {
+        ConfirmationBottomSheet(
+            title = "Exit From ChaFund?",
+            body = "You're about to close the app. Your saved entries stay safe.",
+            confirmLabel = "Exit",
+            onConfirm = {
+                showExitSheet = false
+                activity?.finish()
+            },
+            onDismiss = { showExitSheet = false },
+        )
+    }
 
     Scaffold(
         bottomBar = { if (shouldShowBottomBar) ChaFundBottomBar(navController, navigator) },

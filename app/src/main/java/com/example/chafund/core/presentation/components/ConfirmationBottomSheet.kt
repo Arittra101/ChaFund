@@ -3,18 +3,14 @@ package com.example.chafund.core.presentation.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -35,29 +31,42 @@ fun ConfirmationBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
+        sheetState       = sheetState,
+        containerColor   = MaterialTheme.colorScheme.surface,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .navigationBarsPadding()
                 .padding(horizontal = 20.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(top = 4.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(text = title, fontSize = 17.sp, fontWeight = FontWeight.W500)
-            Text(text = body, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(4.dp))
+            Text(
+                text       = title,
+                fontSize   = 17.sp,
+                fontWeight = FontWeight.W500,
+                color      = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text     = body,
+                fontSize = 13.sp,
+                color    = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                OutlinedButton(
+                SecondaryButton(
+                    text     = "Cancel",
                     onClick  = onDismiss,
                     modifier = Modifier.weight(1f),
-                ) { Text("Cancel") }
+                )
                 PrimaryButton(
-                    text    = confirmLabel,
-                    onClick = onConfirm,
+                    text     = confirmLabel,
+                    onClick  = onConfirm,
                     modifier = Modifier.weight(1f),
                 )
             }
