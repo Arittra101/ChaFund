@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,7 +27,9 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -34,25 +39,33 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.chafund.core.presentation.components.CategoryChip
 import com.example.chafund.core.presentation.components.ConfirmationBottomSheet
+import com.example.chafund.core.presentation.components.DangerButton
+import com.example.chafund.core.presentation.components.SecondaryButton
 import com.example.chafund.core.presentation.components.LockIndicator
 import com.example.chafund.core.presentation.components.PrimaryButton
 import com.example.chafund.feature.history.domain.model.HistoryMonth
@@ -542,6 +555,9 @@ private fun DeleteMonthSheet(
     onDelete: (Long) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    // Which month the destructive action applies to; defaults to the most recent past month.
+    var selectedId by remember(months) { mutableStateOf(months.firstOrNull()?.id) }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor   = MaterialTheme.colorScheme.surface,
@@ -561,37 +577,52 @@ private fun DeleteMonthSheet(
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "Past months only — the current month can't be deleted.",
+                text = "Only past months can be deleted. The current month is kept.",
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             if (months.isEmpty()) {
-                Text(
-                    text = "No past months to delete yet.",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 20.dp),
-                )
+                EmptyMonthsState(onDismiss = onDismiss)
             } else {
-                val shape = RoundedCornerShape(14.dp)
-                Surface(
+                Text(
+                    text = "PAST MONTHS",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.W500,
+                    letterSpacing = 0.8.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                        .border(0.5.dp, AppColors.BorderLight, shape)
-                        // Cap the list so a long history still leaves the sheet usable.
-                        .heightIn(max = 320.dp)
+                        // Cap the list so a long history still leaves the actions reachable.
+                        .heightIn(max = 260.dp)
                         .verticalScroll(rememberScrollState()),
-                    shape = shape,
-                    color = MaterialTheme.colorScheme.surface,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Column {
-                        months.forEachIndexed { index, month ->
-                            MonthDeleteRow(month = month, onDelete = { onDelete(month.id) })
-                            if (index < months.lastIndex) HorizontalDivider(thickness = 0.5.dp)
-                        }
+                    months.forEach { month ->
+                        MonthOptionRow(
+                            month = month,
+                            selected = month.id == selectedId,
+                            onSelect = { selectedId = month.id },
+                        )
                     }
+                }
+
+                WarningBanner("All records of this month will be deleted. This can't be undone.")
+
+                val selected = months.find { it.id == selectedId }
+                DangerButton(
+                    text = if (selected != null) "Delete ${selected.label}" else "Delete month",
+                    onClick = { selectedId?.let(onDelete) },
+                    enabled = selectedId != null,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.W500)
                 }
             }
         }
@@ -599,39 +630,116 @@ private fun DeleteMonthSheet(
 }
 
 @Composable
-private fun MonthDeleteRow(month: HistoryMonth, onDelete: () -> Unit) {
-    Row(
+private fun MonthOptionRow(
+    month: HistoryMonth,
+    selected: Boolean,
+    onSelect: () -> Unit,
+) {
+    val shape = RoundedCornerShape(10.dp)
+    val borderColor =
+        if (selected) MaterialTheme.colorScheme.error else AppColors.BorderLight
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 14.dp, end = 4.dp)
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .border(if (selected) 1.dp else 0.5.dp, borderColor, shape)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onSelect),
+        shape = shape,
+        color = MaterialTheme.colorScheme.surface,
     ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(3.dp),
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text(text = month.label, fontSize = 14.sp, fontWeight = FontWeight.W500)
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    text = "Entry ${month.totalEntries.formatTk()}",
-                    fontSize = 11.sp,
-                    color = AppColors.BalanceTextLight,
-                )
-                Text(
-                    text = "Spent ${month.totalSpent.formatTk()}",
-                    fontSize = 11.sp,
-                    color = AppColors.SpentText,
-                )
+            RadioButton(
+                selected = selected,
+                onClick = null,
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = MaterialTheme.colorScheme.error,
+                ),
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(text = month.label, fontSize = 14.sp, fontWeight = FontWeight.W500)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Entry ${month.totalEntries.formatTk()}",
+                        fontSize = 11.sp,
+                        color = AppColors.BalanceTextLight,
+                    )
+                    Text(
+                        text = "Spent ${month.totalSpent.formatTk()}",
+                        fontSize = 11.sp,
+                        color = AppColors.SpentText,
+                    )
+                }
             }
         }
-        IconButton(onClick = onDelete) {
+    }
+}
+
+@Composable
+private fun WarningBanner(text: String) {
+    val shape = RoundedCornerShape(10.dp)
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp),
+        shape = shape,
+        color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Delete ${month.label}",
+                imageVector = Icons.Default.WarningAmber,
+                contentDescription = null,
                 tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = text,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.error,
             )
         }
+    }
+}
+
+@Composable
+private fun EmptyMonthsState(onDismiss: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceVariant,
+        ) {
+            Icon(
+                imageVector = Icons.Default.EventBusy,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(16.dp)
+                    .size(24.dp),
+            )
+        }
+        Text("No past months yet", fontSize = 14.sp, fontWeight = FontWeight.W500)
+        Text(
+            text = "When this month ends, you can delete it here.",
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        SecondaryButton(
+            text = "Got it",
+            onClick = onDismiss,
+            modifier = Modifier.padding(top = 6.dp),
+        )
     }
 }
 

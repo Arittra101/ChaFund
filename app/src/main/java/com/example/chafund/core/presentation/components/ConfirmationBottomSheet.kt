@@ -64,11 +64,19 @@ fun ConfirmationBottomSheet(
                     onClick  = onDismiss,
                     modifier = Modifier.weight(1f),
                 )
-                PrimaryButton(
-                    text     = confirmLabel,
-                    onClick  = onConfirm,
-                    modifier = Modifier.weight(1f),
-                )
+                if (isDangerous) {
+                    DangerButton(
+                        text     = confirmLabel,
+                        onClick  = onConfirm,
+                        modifier = Modifier.weight(1f),
+                    )
+                } else {
+                    PrimaryButton(
+                        text     = confirmLabel,
+                        onClick  = onConfirm,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
     }
